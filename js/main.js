@@ -129,7 +129,7 @@ function gameLoop() {
   gameMap.drawCheckpoints(ctx, collected)
 
   // 玩家
-  player.draw(ctx)
+  player.draw(ctx, gameMap.offsetX, gameMap.offsetY)
 
   // UI
   ui.drawHUD(ctx, level, collected.filter(function (c) { return c }).length, level.checkpoints.length, W)

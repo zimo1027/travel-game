@@ -45,9 +45,11 @@ Player.prototype.update = function () {
   this.animTime += 0.15
 }
 
-Player.prototype.draw = function (ctx) {
-  var x = this.x
-  var y = this.y
+Player.prototype.draw = function (ctx, offsetX, offsetY) {
+  offsetX = offsetX || 0
+  offsetY = offsetY || 0
+  var x = offsetX + this.x
+  var y = offsetY + this.y
   var t = this.animTime
   var bounce = this.moving ? Math.abs(Math.sin(t)) * 3 : 0
 
