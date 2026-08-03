@@ -93,14 +93,13 @@ function handleClicks() {
 }
 
 function handleLevelCompleteClick(x, y) {
-  // 简单检测按钮区域
-  var pw = 500
-  var ph = 400
+  var pw = Math.min(500, W * 0.85)
+  var ph = Math.min(420, H * 0.55)
   var py = (H - ph) / 2
-  var btnY = py + ph - 100
+  var btnW = pw * 0.5
   var btnH = 64
-  var btnX = (W - 220) / 2
-  var btnW = 220
+  var btnX = (W - btnW) / 2
+  var btnY = py + ph - 100
 
   if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
     if (nextLevelData) {

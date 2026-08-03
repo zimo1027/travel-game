@@ -11,20 +11,24 @@ function isPopupOpen() {
   return popup !== null
 }
 
+function getPopupSize(canvasW, canvasH) {
+  var pw = Math.min(580, canvasW * 0.9)
+  var ph = Math.min(500, canvasH * 0.62)
+  return { pw: pw, ph: ph }
+}
+
 function handlePopupClick(x, y, canvasW, canvasH) {
   if (!popup) return false
 
-  // 弹窗区域
-  var pw = 520
-  var ph = 380
-  var px = (canvasW - pw) / 2
-  var py = (canvasH - ph) / 2
+  var s = getPopupSize(canvasW, canvasH)
+  var px = (canvasW - s.pw) / 2
+  var py = (canvasH - s.ph) / 2
 
   // 按钮区域
-  var btnW = 200
+  var btnW = s.pw * 0.45
   var btnH = 64
   var btnX = (canvasW - btnW) / 2
-  var btnY = py + ph - 100
+  var btnY = py + s.ph - 100
 
   if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
     var cb = popup.onClose
@@ -92,9 +96,10 @@ function drawPopup(ctx, canvasW, canvasH) {
   ctx.fillStyle = 'rgba(0,0,0,0.6)'
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // 弹窗
-  var pw = 520
-  var ph = 380
+  // 弹窗（响应式尺寸）
+  var s = getPopupSize(canvasW, canvasH)
+  var pw = s.pw
+  var ph = s.ph
   var px = (canvasW - pw) / 2
   var py = (canvasH - ph) / 2
 
@@ -121,16 +126,20 @@ function drawPopup(ctx, canvasW, canvasH) {
   ctx.font = '56px sans-serif'
   ctx.fillText('📍', canvasW / 2, py + 80)
 
-  // 正文
+  // 正文（自适应行数）
   ctx.fillStyle = '#666'
-  ctx.font = '22px sans-serif'
-  var lines = wrapText(ctx, popup.body || '', pw - 60)
-  for (var i = 0; i < lines.length && i < 3; i++) {
-    ctx.fillText(lines[i], canvasW / 2, py + 150 + i * 34)
+  ctx.font = '24px sans-serif'
+  var maxW = pw - 60
+  var lines = wrapText(ctx, popup.body || '', maxW)
+  var lineH = 36
+  var maxLines = Math.floor((ph - 260) / lineH)
+  var textStartY = py + 150
+  for (var i = 0; i < lines.length && i < maxLines; i++) {
+    ctx.fillText(lines[i], canvasW / 2, textStartY + i * lineH)
   }
 
   // 按钮
-  var btnW = 200
+  var btnW = pw * 0.45
   var btnH = 64
   var btnX = (canvasW - btnW) / 2
   var btnY = py + ph - 100
@@ -140,7 +149,8 @@ function drawPopup(ctx, canvasW, canvasH) {
   ctx.fill()
   ctx.fillStyle = '#FFF'
   ctx.font = 'bold 26px sans-serif'
-  ctx.fillText(popup.btnText, canvasW / 2, btnY + btnH / 2 - 13)
+  ctx.textBaseline = 'middle'
+  ctx.fillText(popup.btnText, canvasW / 2, btnY + btnH / 2)
 }
 
 function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
@@ -148,20 +158,21 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   ctx.fillStyle = 'rgba(0,0,0,0.7)'
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // 主体
-  ctx.fillStyle = '#FFF'
-  var pw = 500
-  var ph = 400
+  // 主体（响应式）
+  var pw = Math.min(500, canvasW * 0.85)
+  var ph = Math.min(420, canvasH * 0.55)
   var px = (canvasW - pw) / 2
   var py = (canvasH - ph) / 2
+  ctx.fillStyle = '#FFF'
   ctx.beginPath()
   ctx.roundRect(px, py, pw, ph, 24)
   ctx.fill()
 
   // 庆祝图标
-  ctx.font = '64px sans-serif'
+  ctx.font = '56px sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('🎉', canvasW / 2, py + 70)
+  ctx.textBaseline = 'top'
+  ctx.fillText('🎉', canvasW / 2, py + 64)
 
   // 标题
   ctx.fillStyle = '#333'
@@ -172,18 +183,18 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   if (nextLevel) {
     ctx.fillStyle = '#666'
     ctx.font = '24px sans-serif'
-    ctx.fillText('下一站', canvasW / 2, py + 190)
+    ctx.fillText('下一站', canvasW / 2, py + 196)
     ctx.fillStyle = '#FF9800'
     ctx.font = 'bold 32px sans-serif'
-    ctx.fillText(nextLevel.name + ' · ' + nextLevel.subtitle, canvasW / 2, py + 230)
+    ctx.fillText(nextLevel.name + ' · ' + nextLevel.subtitle, canvasW / 2, py + 236)
   } else {
     ctx.fillStyle = '#666'
     ctx.font = '24px sans-serif'
-    ctx.fillText('你已经完成了全部旅程！', canvasW / 2, py + 210)
+    ctx.fillText('你已经完成了全部旅程！', canvasW / 2, py + 216)
   }
 
   // 按钮
-  var btnW = 220
+  var btnW = pw * 0.5
   var btnH = 64
   var btnX = (canvasW - btnW) / 2
   var btnY = py + ph - 100
@@ -193,7 +204,8 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   ctx.fill()
   ctx.fillStyle = '#FFF'
   ctx.font = 'bold 26px sans-serif'
-  ctx.fillText(nextLevel ? '出发！' : '再玩一次', canvasW / 2, btnY + btnH / 2 - 13)
+  ctx.textBaseline = 'middle'
+  ctx.fillText(nextLevel ? '出发！' : '再玩一次', canvasW / 2, btnY + btnH / 2)
 }
 
 function wrapText(ctx, text, maxWidth) {
