@@ -45,6 +45,7 @@ Map.prototype.draw = function (ctx) {
   var oy = this.offsetY
   var w = lv.width
   var h = lv.height
+  var isLandscape = w > h
 
   // === 1. 基础底色 ===
   ctx.fillStyle = lv.bgColor
@@ -60,68 +61,66 @@ Map.prototype.draw = function (ctx) {
     }
   }
 
-  // === 3. 中轴线大道 ===
+  // === 3. 中轴线大道（水平：从左到右） ===
   var roadW = 80
-  var roadX = w / 2 - roadW / 2
-  var roadGrad = ctx.createLinearGradient(0, oy, 0, oy + h)
+  var roadY = h / 2 - roadW / 2
+  var roadGrad = ctx.createLinearGradient(ox, 0, ox + w, 0)
   roadGrad.addColorStop(0, '#F5EDE0')
   roadGrad.addColorStop(0.5, '#ECE0CC')
   roadGrad.addColorStop(1, '#F5EDE0')
   ctx.fillStyle = roadGrad
-  ctx.fillRect(ox + roadX, oy, roadW, h)
+  ctx.fillRect(ox, oy + roadY, w, roadW)
 
-  // 横向通道
+  // 纵向通道
   ctx.fillStyle = '#ECE0CC'
-  ctx.fillRect(ox, oy + h / 2 - 24, w, 48)
-  if (h > 800) {
-    ctx.fillRect(ox, oy + h * 0.35 - 20, w, 40)
-    ctx.fillRect(ox, oy + h * 0.65 - 20, w, 40)
+  ctx.fillRect(ox + w / 2 - 24, oy, 48, h)
+  if (w > 1000) {
+    ctx.fillRect(ox + w * 0.33 - 20, oy, 40, h)
+    ctx.fillRect(ox + w * 0.66 - 20, oy, 40, h)
   }
 
   // === 4. 中轴线装饰（石板纹路） ===
   ctx.strokeStyle = 'rgba(180,160,140,0.3)'
   ctx.lineWidth = 1
-  for (var sy = oy; sy < oy + h; sy += 30) {
+  for (var sx = ox; sx < ox + w; sx += 30) {
     ctx.beginPath()
-    ctx.moveTo(ox + roadX, sy)
-    ctx.lineTo(ox + roadX + roadW, sy)
+    ctx.moveTo(sx, oy + roadY)
+    ctx.lineTo(sx, oy + roadY + roadW)
     ctx.stroke()
   }
 
-  // === 5. 宫墙（两侧红墙） ===
+  // === 5. 宫墙（上下红墙） ===
   var wallW = 18
-  // 左墙
-  var wallGradL = ctx.createLinearGradient(ox, 0, ox + wallW, 0)
-  wallGradL.addColorStop(0, '#C23B2A')
-  wallGradL.addColorStop(0.3, '#D44538')
-  wallGradL.addColorStop(0.7, '#B83528')
-  wallGradL.addColorStop(1, '#A02A1E')
-  ctx.fillStyle = wallGradL
-  ctx.fillRect(ox, oy, wallW, h)
-  // 墙顶
+  // 上墙
+  var wallGradT = ctx.createLinearGradient(0, oy, 0, oy + wallW)
+  wallGradT.addColorStop(0, '#C23B2A')
+  wallGradT.addColorStop(0.3, '#D44538')
+  wallGradT.addColorStop(0.7, '#B83528')
+  wallGradT.addColorStop(1, '#A02A1E')
+  ctx.fillStyle = wallGradT
+  ctx.fillRect(ox, oy, w, wallW)
   ctx.fillStyle = '#F5D54A'
-  ctx.fillRect(ox, oy, wallW, 6)
+  ctx.fillRect(ox, oy, w, 6)
 
-  // 右墙
-  var wallGradR = ctx.createLinearGradient(ox + w - wallW, 0, ox + w, 0)
-  wallGradR.addColorStop(0, '#A02A1E')
-  wallGradR.addColorStop(0.3, '#B83528')
-  wallGradR.addColorStop(0.7, '#D44538')
-  wallGradR.addColorStop(1, '#C23B2A')
-  ctx.fillStyle = wallGradR
-  ctx.fillRect(ox + w - wallW, oy, wallW, h)
+  // 下墙
+  var wallGradB = ctx.createLinearGradient(0, oy + h - wallW, 0, oy + h)
+  wallGradB.addColorStop(0, '#A02A1E')
+  wallGradB.addColorStop(0.3, '#B83528')
+  wallGradB.addColorStop(0.7, '#D44538')
+  wallGradB.addColorStop(1, '#C23B2A')
+  ctx.fillStyle = wallGradB
+  ctx.fillRect(ox, oy + h - wallW, w, wallW)
   ctx.fillStyle = '#F5D54A'
-  ctx.fillRect(ox + w - wallW, oy, wallW, 6)
+  ctx.fillRect(ox, oy + h - wallW, w, 6)
 
-  // 墙柱（每隔一段距离）
-  for (var py = oy + 30; py < oy + h; py += 100) {
+  // 墙柱
+  for (var px = ox + 30; px < ox + w; px += 100) {
     ctx.fillStyle = '#C23B2A'
-    ctx.fillRect(ox + 2, py, wallW - 4, 20)
-    ctx.fillRect(ox + w - wallW + 2, py, wallW - 4, 20)
-    // 金色柱头
+    ctx.fillRect(px, oy + 2, 20, wallW - 4)
+    ctx.fillRect(px, oy + h - wallW + 2, 20, wallW - 4)
     ctx.fillStyle = '#F5D54A'
-    ctx.fillRect(ox + 1, py, wallW - 2, 4)
-    ctx.fillRect(ox + w - wallW + 1, py, wallW - 2, 4)
+    ctx.fillRect(px, oy + 1, 20, 4)
+    ctx.fillRect(px, oy + h - wallW + 1, 20, 4)
   }
 
   // === 6. 装饰物 ===
@@ -130,31 +129,27 @@ Map.prototype.draw = function (ctx) {
     var dc = decor[d]
     var dx = ox + dc.x
     var dy = oy + dc.y
-    // 避开道路中央
-    if (Math.abs(dc.x - w / 2) < roadW / 2 + 10 && Math.abs(dc.y - h / 2) < 30) continue
-    if (h > 800 && Math.abs(dc.y - h * 0.35) < 25) continue
-    if (h > 800 && Math.abs(dc.y - h * 0.65) < 25) continue
+    // 避开水平中轴道路
+    if (Math.abs(dc.y - h / 2) < roadW / 2 + 10 && Math.abs(dc.x - w / 2) < 30) continue
+    if (w > 1000 && Math.abs(dc.x - w * 0.33) < 25) continue
+    if (w > 1000 && Math.abs(dc.x - w * 0.66) < 25) continue
 
     if (dc.type === 0) {
-      // 小花
       ctx.fillStyle = '#E91E63'
       ctx.beginPath(); ctx.arc(dx, dy, dc.r, 0, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#FFEB3B'
       ctx.beginPath(); ctx.arc(dx, dy, dc.r * 0.4, 0, Math.PI * 2); ctx.fill()
     } else if (dc.type === 1) {
-      // 草丛
       ctx.fillStyle = '#6B8E23'
       ctx.beginPath(); ctx.arc(dx, dy, dc.r + 2, 0, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#7BA428'
       ctx.beginPath(); ctx.arc(dx - 2, dy - 2, dc.r, 0, Math.PI * 2); ctx.fill()
     } else if (dc.type === 2) {
-      // 灌木
       ctx.fillStyle = '#4A7C3F'
       ctx.beginPath(); ctx.arc(dx, dy, dc.r + 3, 0, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#5C9A50'
       ctx.beginPath(); ctx.arc(dx + 1, dy - 1, dc.r + 1, 0, Math.PI * 2); ctx.fill()
     } else {
-      // 落叶
       ctx.fillStyle = '#C8A052'
       ctx.beginPath()
       ctx.ellipse(dx, dy, dc.r, dc.r * 0.5, Math.random() * Math.PI, 0, Math.PI * 2)
@@ -162,18 +157,15 @@ Map.prototype.draw = function (ctx) {
     }
   }
 
-  // === 7. 灯笼装饰（中轴线两侧） ===
-  for (var lx = ox + roadX - 24; lx <= ox + roadX + roadW + 24; lx += roadW + 48) {
-    for (var ly = oy + 60; ly < oy + h; ly += 120) {
-      // 灯杆
+  // === 7. 灯笼装饰（沿水平中轴线） ===
+  for (var lx = ox + 60; lx < ox + w; lx += 120) {
+    for (var ly = oy + roadY - 24; ly <= oy + roadY + roadW + 24; ly += roadW + 48) {
       ctx.fillStyle = '#5D4037'
       ctx.fillRect(lx - 1, ly - 18, 2, 24)
-      // 灯笼
       ctx.fillStyle = '#E53935'
       ctx.beginPath()
       ctx.ellipse(lx, ly - 18, 6, 9, 0, 0, Math.PI * 2)
       ctx.fill()
-      // 灯笼高光
       ctx.fillStyle = 'rgba(255,255,255,0.25)'
       ctx.beginPath()
       ctx.arc(lx - 1, ly - 21, 3, 0, Math.PI * 2)
@@ -188,15 +180,12 @@ Map.prototype.draw = function (ctx) {
     var cx = ox + o.x + o.w / 2
     var cy = oy + o.y + o.h / 2
 
-    // 底座
     ctx.fillStyle = '#9E9E9E'
     ctx.beginPath()
     ctx.roundRect(cx - o.w / 2 - 4, cy - o.h / 2 - 4, o.w + 8, o.h + 8, 4)
     ctx.fill()
 
-    // 主体（石狮或铜缸随机）
     if (j % 2 === 0) {
-      // 石狮
       ctx.fillStyle = '#BDBDBD'
       ctx.beginPath()
       ctx.arc(cx, cy - 4, o.w / 2 + 2, 0, Math.PI * 2)
@@ -205,12 +194,10 @@ Map.prototype.draw = function (ctx) {
       ctx.beginPath()
       ctx.arc(cx - 2, cy - 8, o.w / 3, 0, Math.PI * 2)
       ctx.fill()
-      // 眼睛
       ctx.fillStyle = '#333'
       ctx.beginPath(); ctx.arc(cx - 3, cy - 12, 2, 0, Math.PI * 2); ctx.fill()
       ctx.beginPath(); ctx.arc(cx + 5, cy - 12, 2, 0, Math.PI * 2); ctx.fill()
     } else {
-      // 铜缸
       ctx.fillStyle = '#B8860B'
       ctx.beginPath()
       ctx.arc(cx, cy, o.w / 2, 0, Math.PI * 2)
@@ -286,7 +273,7 @@ Map.prototype.screenToWorld = function (sx, sy) {
 }
 
 Map.prototype.isWalkable = function (x, y) {
-  if (x < 22 || x > this.width - 22 || y < 10 || y > this.height - 10) return false
+  if (x < 10 || x > this.width - 10 || y < 22 || y > this.height - 22) return false
   return !this.collides(x, y, 10)
 }
 
