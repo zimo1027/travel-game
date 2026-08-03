@@ -1,0 +1,12 @@
+{
+  "description": "旅游闯关小游戏",
+  "compileType": "game",
+  "libVersion": "3.3.4",
+  "appid": "",
+  "projectname": "travel-game",
+  "setting": {
+    "urlCheck": false,
+    "es6": true
+  },
+  "condition": {}
+}
