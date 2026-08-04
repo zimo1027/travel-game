@@ -1,94 +1,117 @@
-// 故宫飞行棋 — 仅盘面
+// 故宫飞行棋 — 盘面
 var canvas = wx.createCanvas()
 var ctx = canvas.getContext('2d')
 
-// ========== 屏幕适配 ==========
 var W = canvas.width
 var H = canvas.height
-var S = H / 667
 
-// ========== 棋盘参数 ==========
-var ROWS = 7
-var COLS = 9
-var tileSize = Math.floor(H * 0.78 / (ROWS * 1.35))
-var gapY = tileSize * 0.35
-var boardW = COLS * tileSize
-var boardH = ROWS * tileSize + (ROWS - 1) * gapY
-var boardX = (W - boardW) / 2
-var boardY = (H - boardH) / 2
+// ========== 11x11 棋盘 ==========
+var SIZE = 11
+var cellSize = Math.floor(Math.min(W, H) * 0.78 / SIZE)
+var boardPx = SIZE * cellSize
+var boardX = (W - boardPx) / 2
+var boardY = (H - boardPx) / 2
 
-// 计算格子在棋盘上的像素坐标
-function tileX(col) { return boardX + col * tileSize }
-function tileY(row) { return boardY + row * (tileSize + gapY) }
+function cx(col) { return boardX + col * cellSize }
+function cy(row) { return boardY + row * cellSize }
 
-// ========== 蛇形路径 ==========
+// ========== 路径定义 ==========
+// 外围一圈顺时针 + 从左边中间拐入中心
 var path = []
-for (var r = 0; r < ROWS; r++) {
-  if (r % 2 === 0) {
-    for (var c = 0; c < COLS; c++) { path.push({ row: r, col: c }) }
-  } else {
-    for (var c = COLS - 1; c >= 0; c--) { path.push({ row: r, col: c }) }
-  }
-}
 
-// 格子类型
+// 顶边: (0,0)→(0,10) 左到右
+for (var c = 0; c < SIZE; c++) { path.push({ row: 0, col: c }) }
+// 右边: (1,10)→(10,10) 上到下
+for (var r = 1; r < SIZE; r++) { path.push({ row: r, col: SIZE - 1 }) }
+// 底边: (10,9)→(10,0) 右到左
+for (var c = SIZE - 2; c >= 0; c--) { path.push({ row: SIZE - 1, col: c }) }
+// 左边: (9,0)→(5,0) 下到上，到中间位置拐弯
+for (var r = SIZE - 2; r >= 5; r--) { path.push({ row: r, col: 0 }) }
+
+// 拐入中心：(5,1)→(5,2)→(5,3)→(5,4)→(5,5)
+for (var c2 = 1; c2 <= 5; c2++) { path.push({ row: 5, col: c2 }) }
+
+// 中心点就是终点索引
+var TURN_IDX = path.length - 6  // 拐弯处的前一个格子索引（左边缘最后一个）
+
+// ========== 格子类型 ==========
 for (var i = 0; i < path.length; i++) { path[i].type = 'normal' }
-function setTile(i, type, label) { path[i].type = type; path[i].label = label }
+function set(i, type, label) { path[i].type = type; path[i].label = label }
 
-// 起点 + 终点
-setTile(0, 'start', '午门')
-setTile(path.length - 1, 'end', '神武门')
+// 起点
+set(0, 'start', '午门')
 
-// 打卡点
-setTile(12, 'checkpoint', '太和门')
-setTile(26, 'checkpoint', '太和殿')
-setTile(40, 'checkpoint', '乾清宫')
-setTile(54, 'checkpoint', '御花园')
+// 外圈打卡点
+set(8,  'checkpoint', '太和门')
+set(18, 'checkpoint', '太和殿')
+set(28, 'checkpoint', '乾清宫')
 
-// 特殊格
-setTile(5,  'forward',  '+3')
-setTile(9,  'backward', '-2')
-setTile(16, 'forward',  '+4')
-setTile(18, 'skip',     '休')
-setTile(23, 'teleport', '穿')
-setTile(31, 'backward', '-3')
-setTile(35, 'question', '答')
-setTile(38, 'forward',  '+3')
-setTile(44, 'skip',     '休')
-setTile(48, 'backward', '-2')
-setTile(50, 'teleport', '穿')
-setTile(57, 'forward',  '+4')
+// 外圈特殊格
+set(5,  'forward',  '+3')
+set(13, 'backward', '-2')
+set(16, 'skip',     '休')
+set(22, 'teleport', '穿')
+set(25, 'forward',  '+4')
+set(32, 'backward', '-2')
+
+// 内圈（拐入中心轴线）
+set(37, 'checkpoint', '御花园')
+set(38, 'forward',  '+2')
+set(39, 'skip',     '休')
+set(path.length - 1, 'end', '神武门')
 
 // ========== 渲染 ==========
 function draw() {
   // 背景
-  ctx.fillStyle = '#2D1515'
+  ctx.fillStyle = '#1A0A0A'
   ctx.fillRect(0, 0, W, H)
 
-  // 棋盘底板
+  // 棋盘底板（方形）
   ctx.fillStyle = '#F5E6D3'
-  ctx.fillRect(boardX - 4, boardY - 4, boardW + 8, boardH + 8)
+  ctx.fillRect(boardX - 6, boardY - 6, boardPx + 12, boardPx + 12)
 
   // 木框
-  ctx.strokeStyle = '#8B5E3C'
+  ctx.strokeStyle = '#8B4513'
   ctx.lineWidth = 8
-  ctx.strokeRect(boardX - 4, boardY - 4, boardW + 8, boardH + 8)
+  ctx.strokeRect(boardX - 6, boardY - 6, boardPx + 12, boardPx + 12)
 
-  // 行间背景线（分隔各行）
-  for (var r = 0; r < ROWS; r++) {
-    var rowTop = tileY(r)
-    ctx.fillStyle = r % 2 === 0 ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.08)'
-    ctx.fillRect(boardX, rowTop, boardW, tileSize)
-  }
+  // 内框（分隔外圈和内部）
+  ctx.strokeStyle = '#8B4513'
+  ctx.lineWidth = 3
+  ctx.strokeRect(boardX + cellSize, boardY + cellSize,
+                 cellSize * (SIZE - 2), cellSize * (SIZE - 2))
 
-  // 路径格子
+  // 内部十字装饰线
+  var midX = boardX + cellSize * SIZE / 2
+  var midY = boardY + cellSize * SIZE / 2
+  ctx.strokeStyle = 'rgba(139,69,19,0.3)'
+  ctx.lineWidth = 1
+  // 竖线
+  ctx.beginPath()
+  ctx.moveTo(midX, boardY + cellSize)
+  ctx.lineTo(midX, boardY + cellSize * (SIZE - 1))
+  ctx.stroke()
+  // 横线
+  ctx.beginPath()
+  ctx.moveTo(boardX + cellSize, midY)
+  ctx.lineTo(boardX + cellSize * (SIZE - 1), midY)
+  ctx.stroke()
+
+  // 内部故宫字样
+  ctx.fillStyle = 'rgba(212,175,55,0.15)'
+  var big = Math.round(cellSize * 1.2) + 'px sans-serif'
+  ctx.font = big
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('紫禁城', midX, midY)
+
+  // 画格子
   for (var i = 0; i < path.length; i++) {
     var p = path[i]
-    var x = tileX(p.col)
-    var y = tileY(p.row)
-    var pad = 2
+    var x = cx(p.col)
+    var y = cy(p.row)
+    var pad = 3
 
-    // 底色
     var color = '#E8D5B7'
     if (p.type === 'checkpoint') color = '#FF9800'
     else if (p.type === 'forward')   color = '#81C784'
@@ -100,76 +123,48 @@ function draw() {
     else if (p.type === 'end')       color = '#D4AF37'
 
     ctx.fillStyle = color
-    ctx.fillRect(x + pad, y + pad, tileSize - pad * 2, tileSize - pad * 2)
+    ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
 
-    // 圆角感：四角小圆弧
     ctx.strokeStyle = '#C8B898'
     ctx.lineWidth = 1
-    ctx.strokeRect(x + pad, y + pad, tileSize - pad * 2, tileSize - pad * 2)
+    ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
 
-    // 格子标签
+    // 序号
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'
+    ctx.font = Math.round(cellSize * 0.16) + 'px sans-serif'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(i + 1, x + pad + 2, y + pad + 1)
+
+    // 标签
     if (p.label) {
-      var fs = Math.round(tileSize * 0.22)
+      var fs = Math.round(cellSize * 0.18)
       ctx.fillStyle = '#333'
       ctx.font = 'bold ' + fs + 'px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(p.label, x + tileSize / 2, y + tileSize / 2)
+      ctx.fillText(p.label, x + cellSize / 2, y + cellSize / 2)
     }
   }
 
-  // 行内连接线（水平相邻）
-  for (var j = 0; j < path.length - 1; j++) {
-    var a = path[j]
-    var b = path[j + 1]
-    if (a.row !== b.row) continue  // 跨行连接单独处理
+  // 进入内圈的红色拐弯箭头
+  var turnCell = path[TURN_IDX]
+  var innerCell = path[TURN_IDX + 1]
+  var tax = cx(turnCell.col) + cellSize / 2
+  var tay = cy(turnCell.row) + cellSize / 2
+  var tbx = cx(innerCell.col) + cellSize / 2
+  var tby = cy(innerCell.row) + cellSize / 2
 
-    var ax = tileX(a.col) + tileSize
-    var ay = tileY(a.row) + tileSize / 2
-    var bx = tileX(b.col)
-    var by = tileY(b.row) + tileSize / 2
-
-    ctx.strokeStyle = '#8B5E3C'
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(ax, ay)
-    ctx.lineTo(bx, by)
-    ctx.stroke()
-
-    // 箭头标记
-    var arrowX = (ax + bx) / 2
-    var arrowY = ay
-    ctx.fillStyle = '#8B5E3C'
-    ctx.beginPath()
-    ctx.arc(arrowX, arrowY, 3, 0, Math.PI * 2)
-    ctx.fill()
-  }
-
-  // 跨行连接线（垂直/对角，蛇形拐弯处）
-  for (var k = 0; k < path.length - 1; k++) {
-    var c = path[k]
-    var d = path[k + 1]
-    if (c.row === d.row) continue
-
-    var cx = tileX(c.col) + tileSize / 2
-    var cy = tileY(c.row) + tileSize
-    var dx = tileX(d.col) + tileSize / 2
-    var dy = tileY(d.row)
-
-    ctx.strokeStyle = '#8B5E3C'
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(cx, cy)
-    ctx.lineTo(dx, dy)
-    ctx.stroke()
-
-    var turnX = cx
-    var turnY = (cy + dy) / 2
-    ctx.fillStyle = '#8B5E3C'
-    ctx.beginPath()
-    ctx.arc(turnX, turnY, 3, 0, Math.PI * 2)
-    ctx.fill()
-  }
+  ctx.strokeStyle = '#C23B2A'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(tax, tay)
+  ctx.lineTo(tbx, tby)
+  ctx.stroke()
+  ctx.fillStyle = '#C23B2A'
+  ctx.beginPath()
+  ctx.arc((tax + tbx) / 2, (tay + tby) / 2, 4, 0, Math.PI * 2)
+  ctx.fill()
 }
 
 draw()
