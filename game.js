@@ -1,16 +1,25 @@
 // 故宫飞行棋 — 盘面
 var canvas = wx.createCanvas()
 var ctx = canvas.getContext('2d')
-var W = canvas.width
-var H = canvas.height
 
-// ========== 13x13 棋盘 ==========
+// ========== 屏幕尺寸 ==========
+var sysInfo = wx.getSystemInfoSync()
+var SW = sysInfo.windowWidth
+var SH = sysInfo.windowHeight
+
+// ========== 13x13 棋盘参数（动态计算） ==========
 var SIZE = 13
-var MID = Math.floor(SIZE / 2)  // 中轴线列 = 6
-var cellSize = Math.floor(Math.min(W, H) * 0.8 / SIZE)
-var boardPx = SIZE * cellSize
-var boardX = (W - boardPx) / 2
-var boardY = (H - boardPx) / 2
+var MID = Math.floor(SIZE / 2)
+var W, H, cellSize, boardPx, boardX, boardY
+
+function recalcLayout() {
+  W = canvas.width || SW
+  H = canvas.height || SH
+  cellSize = Math.floor(Math.min(W, H) * 0.82 / SIZE)
+  boardPx = SIZE * cellSize
+  boardX = (W - boardPx) / 2
+  boardY = (H - boardPx) / 2
+}
 
 function cx(col) { return boardX + col * cellSize }
 function cy(row) { return boardY + row * cellSize }
@@ -74,22 +83,26 @@ set(path.length - 1, 'end', '神武门')
 
 // ========== 渲染 ==========
 function draw() {
+  recalcLayout()
+
   // 深色背景
   ctx.fillStyle = '#1A0A0A'
   ctx.fillRect(0, 0, W, H)
 
   // 棋盘底板
+  var pad6 = Math.round(6 * Math.min(W, H) / 667)
   ctx.fillStyle = '#F5E6D3'
-  ctx.fillRect(boardX - 6, boardY - 6, boardPx + 12, boardPx + 12)
+  ctx.fillRect(boardX - pad6, boardY - pad6, boardPx + pad6 * 2, boardPx + pad6 * 2)
 
   // 外木框
+  var frameW = Math.round(8 * Math.min(W, H) / 667)
   ctx.strokeStyle = '#8B4513'
-  ctx.lineWidth = 8
-  ctx.strokeRect(boardX - 6, boardY - 6, boardPx + 12, boardPx + 12)
+  ctx.lineWidth = frameW
+  ctx.strokeRect(boardX - pad6, boardY - pad6, boardPx + pad6 * 2, boardPx + pad6 * 2)
 
   // 内框线
   ctx.strokeStyle = '#8B4513'
-  ctx.lineWidth = 2
+  ctx.lineWidth = Math.round(2 * Math.min(W, H) / 667)
   ctx.strokeRect(boardX + cellSize, boardY + cellSize,
                  cellSize * (SIZE - 2), cellSize * (SIZE - 2))
 
@@ -103,7 +116,7 @@ function draw() {
     var p = path[i]
     var x = cx(p.col)
     var y = cy(p.row)
-    var pad = 3
+    var pad = Math.round(cellSize * 0.06)
     var onAxis = (p.col === MID)
 
     var color = '#E8D5B7'
@@ -120,7 +133,7 @@ function draw() {
 
     // 中轴线格子加粗边框
     ctx.strokeStyle = onAxis ? '#C23B2A' : '#C8B898'
-    ctx.lineWidth = onAxis ? 2 : 1
+    ctx.lineWidth = onAxis ? Math.max(2, Math.round(cellSize * 0.04)) : 1
     ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
 
     // 序号
@@ -128,7 +141,7 @@ function draw() {
     ctx.font = Math.round(cellSize * 0.15) + 'px sans-serif'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
-    ctx.fillText(i + 1, x + pad + 2, y + pad + 1)
+    ctx.fillText(String(i + 1), x + pad + 2, y + pad + 1)
 
     // 标签
     if (p.label) {
@@ -142,4 +155,12 @@ function draw() {
   }
 }
 
+// ========== 启动 ==========
+recalcLayout()
 draw()
+
+// 窗口变化时重绘
+wx.onWindowResize(function () {
+  recalcLayout()
+  draw()
+})
