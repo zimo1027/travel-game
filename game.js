@@ -42,8 +42,8 @@ setTile(40, 'checkpoint', '乾清宫', { cpIndex: 2 })
 setTile(54, 'checkpoint', '御花园', { cpIndex: 3 })
 
 // 起点 + 终点
-setTile(0,  'start',  '午门🚩', {})
-setTile(TOTAL - 1, 'end', '神武门🏁', {})
+setTile(0,  'start',  '午 门', {})
+setTile(TOTAL - 1, 'end', '神武门', {})
 
 // 特殊格子
 setTile(5,  'forward',  '疾行 +3',  { steps: 3 })
@@ -80,7 +80,7 @@ function rollDice() {
   diceRolling = true
   diceAngle = 0
   phase = 'rolling'
-  message = '🎲 ' + diceValue + ' 点！'
+  message = '= ' + diceValue + ' 点!'
   messageTimer = 60
 }
 
@@ -99,45 +99,45 @@ function handleLanding(tileIndex) {
     var ci = tile.data.cpIndex
     if (!collected[ci]) {
       collected[ci] = true
-      message = '📍 打卡：' + tile.label
+      message = '* 打卡: ' + tile.label
       messageTimer = 80
     }
   } else if (tile.type === 'forward') {
     var extra = tile.data.steps
-    message = '⚡ 疾行 +' + extra + ' 步！'
+    message = '>> 疾行 +' + extra + ' 步!'
     messageTimer = 60
     var newPos = (playerPos + extra) % TOTAL
     playerPos = newPos
     handleLanding(newPos)  // 递归处理连续触发
   } else if (tile.type === 'backward') {
     var back = tile.data.steps
-    message = '🐢 后退 ' + back + ' 步…'
+    message = '< 后退 ' + back + ' 步.'
     messageTimer = 60
     var newPos2 = (playerPos - back + TOTAL) % TOTAL
     playerPos = newPos2
     handleLanding(newPos2)
   } else if (tile.type === 'skip') {
-    message = '😴 休息一回合'
+    message = '-- 休息一回合'
     messageTimer = 60
     skipNext = true
   } else if (tile.type === 'teleport') {
     var to = tile.data.toTile
-    message = '🌀 传送到 ' + path[to].label + '！'
+    message = '>> 传送到 ' + path[to].label + '!'
     messageTimer = 60
     playerPos = to
     handleLanding(to)
   } else if (tile.type === 'question') {
-    message = '❓ 答题功能开发中…'
+    message = '? 答题功能开发中.'
     messageTimer = 60
   } else if (tile.type === 'end') {
     var allDone = collected.every(function (c) { return c })
     if (allDone) {
-      message = '🏆 恭喜通关！'
+      message = '*** 恭喜通关!'
       messageTimer = 999
       phase = 'done'
       return
     } else {
-      message = '🔒 还有景点未打卡，继续前进！'
+      message = '! 还有景点未打卡，继续前进!'
       messageTimer = 80
     }
   }
@@ -360,7 +360,7 @@ function drawHUD() {
   var ckNames = ['太和门', '太和殿', '乾清宫', '御花园']
   var ckStr = ''
   for (var k = 0; k < 4; k++) {
-    ckStr += (collected[k] ? '✅' : '⬜') + ckNames[k] + ' '
+    ckStr += (collected[k] ? '[V]' : '[ ]') + ckNames[k] + ' '
   }
   ctx.fillStyle = 'rgba(255,255,255,0.8)'
   ctx.font = Math.round(14 * S) + 'px sans-serif'
@@ -385,7 +385,7 @@ function drawInfoPanel() {
   ctx.font = 'bold ' + Math.round(18 * S) + 'px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('🎲 点击掷骰子', px + pw / 2, py + 16 * S)
+  ctx.fillText('[ 点击掷骰子 ]', px + pw / 2, py + 16 * S)
 
   // 骰子
   var diceSize = Math.min(130 * S, pw - 40 * S)
@@ -434,7 +434,7 @@ function gameLoop() {
       diceRolling = false
       if (skipNext) {
         skipNext = false
-        message = '😴 跳过本回合'
+        message = '-- 跳过本回合'
         messageTimer = 60
         phase = 'roll'
       } else {
