@@ -1,5 +1,4 @@
 // 故宫深度游 — 主入口
-require('./polyfill')
 var Player = require('./player')
 var mapMod = require('./map')
 var Input = require('./input')
@@ -8,6 +7,37 @@ var ui = require('./ui')
 
 var canvas = wx.createCanvas()
 var ctx = canvas.getContext('2d')
+
+// ========== Canvas API polyfills ==========
+// 微信小游戏不支持 roundRect / ellipse
+var CtxProto = ctx.constructor.prototype
+if (!CtxProto.roundRect) {
+  CtxProto.roundRect = function (x, y, w, h, r) {
+    r = r || 0
+    r = Math.min(r, w / 2, h / 2)
+    if (r <= 0) { this.rect(x, y, w, h); return }
+    this.moveTo(x + r, y)
+    this.lineTo(x + w - r, y)
+    this.arcTo(x + w, y, x + w, y + r, r)
+    this.lineTo(x + w, y + h - r)
+    this.arcTo(x + w, y + h, x + w - r, y + h, r)
+    this.lineTo(x + r, y + h)
+    this.arcTo(x, y + h, x, y + h - r, r)
+    this.lineTo(x, y + r)
+    this.arcTo(x, y, x + r, y, r)
+    this.closePath()
+  }
+}
+if (!CtxProto.ellipse) {
+  CtxProto.ellipse = function (x, y, rx, ry, rotation, startAngle, endAngle, counterclockwise) {
+    this.save()
+    this.translate(x, y)
+    if (rotation) this.rotate(rotation)
+    this.scale(rx, ry)
+    this.arc(0, 0, 1, startAngle, endAngle, counterclockwise)
+    this.restore()
+  }
+}
 var input = new Input(canvas)
 
 var W = canvas.width
