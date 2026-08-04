@@ -10,11 +10,16 @@ var S = H / 667
 // ========== 棋盘参数 ==========
 var ROWS = 7
 var COLS = 9
-var cellSize = Math.floor(H * 0.78 / ROWS)
-var boardW = COLS * cellSize
-var boardH = ROWS * cellSize
+var tileSize = Math.floor(H * 0.78 / (ROWS * 1.35))
+var gapY = tileSize * 0.35
+var boardW = COLS * tileSize
+var boardH = ROWS * tileSize + (ROWS - 1) * gapY
 var boardX = (W - boardW) / 2
 var boardY = (H - boardH) / 2
+
+// 计算格子在棋盘上的像素坐标
+function tileX(col) { return boardX + col * tileSize }
+function tileY(row) { return boardY + row * (tileSize + gapY) }
 
 // ========== 蛇形路径 ==========
 var path = []
@@ -69,10 +74,18 @@ function draw() {
   ctx.lineWidth = 8
   ctx.strokeRect(boardX - 4, boardY - 4, boardW + 8, boardH + 8)
 
+  // 行间背景线（分隔各行）
+  for (var r = 0; r < ROWS; r++) {
+    var rowTop = tileY(r)
+    ctx.fillStyle = r % 2 === 0 ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.08)'
+    ctx.fillRect(boardX, rowTop, boardW, tileSize)
+  }
+
+  // 路径格子
   for (var i = 0; i < path.length; i++) {
     var p = path[i]
-    var x = boardX + p.col * cellSize
-    var y = boardY + p.row * cellSize
+    var x = tileX(p.col)
+    var y = tileY(p.row)
     var pad = 2
 
     // 底色
@@ -87,33 +100,74 @@ function draw() {
     else if (p.type === 'end')       color = '#D4AF37'
 
     ctx.fillStyle = color
-    ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
+    ctx.fillRect(x + pad, y + pad, tileSize - pad * 2, tileSize - pad * 2)
 
-    // 边框
+    // 圆角感：四角小圆弧
     ctx.strokeStyle = '#C8B898'
     ctx.lineWidth = 1
-    ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
+    ctx.strokeRect(x + pad, y + pad, tileSize - pad * 2, tileSize - pad * 2)
 
     // 格子标签
     if (p.label) {
-      var fs = Math.round(cellSize * 0.22)
+      var fs = Math.round(tileSize * 0.22)
       ctx.fillStyle = '#333'
       ctx.font = 'bold ' + fs + 'px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(p.label, x + cellSize / 2, y + cellSize / 2)
+      ctx.fillText(p.label, x + tileSize / 2, y + tileSize / 2)
     }
   }
 
-  // 相邻格连接点
+  // 行内连接线（水平相邻）
   for (var j = 0; j < path.length - 1; j++) {
     var a = path[j]
     var b = path[j + 1]
-    var mx = boardX + (a.col + b.col) * cellSize / 2 + cellSize / 2
-    var my = boardY + (a.row + b.row) * cellSize / 2 + cellSize / 2
-    ctx.fillStyle = 'rgba(139,94,60,0.5)'
+    if (a.row !== b.row) continue  // 跨行连接单独处理
+
+    var ax = tileX(a.col) + tileSize
+    var ay = tileY(a.row) + tileSize / 2
+    var bx = tileX(b.col)
+    var by = tileY(b.row) + tileSize / 2
+
+    ctx.strokeStyle = '#8B5E3C'
+    ctx.lineWidth = 3
     ctx.beginPath()
-    ctx.arc(mx, my, cellSize * 0.06, 0, Math.PI * 2)
+    ctx.moveTo(ax, ay)
+    ctx.lineTo(bx, by)
+    ctx.stroke()
+
+    // 箭头标记
+    var arrowX = (ax + bx) / 2
+    var arrowY = ay
+    ctx.fillStyle = '#8B5E3C'
+    ctx.beginPath()
+    ctx.arc(arrowX, arrowY, 3, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  // 跨行连接线（垂直/对角，蛇形拐弯处）
+  for (var k = 0; k < path.length - 1; k++) {
+    var c = path[k]
+    var d = path[k + 1]
+    if (c.row === d.row) continue
+
+    var cx = tileX(c.col) + tileSize / 2
+    var cy = tileY(c.row) + tileSize
+    var dx = tileX(d.col) + tileSize / 2
+    var dy = tileY(d.row)
+
+    ctx.strokeStyle = '#8B5E3C'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.lineTo(dx, dy)
+    ctx.stroke()
+
+    var turnX = cx
+    var turnY = (cy + dy) / 2
+    ctx.fillStyle = '#8B5E3C'
+    ctx.beginPath()
+    ctx.arc(turnX, turnY, 3, 0, Math.PI * 2)
     ctx.fill()
   }
 }
