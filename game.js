@@ -7,15 +7,18 @@ var sysInfo = wx.getSystemInfoSync()
 var SW = sysInfo.windowWidth
 var SH = sysInfo.windowHeight
 
-// ========== 13x13 棋盘参数（动态计算） ==========
+// ========== 13x13 棋盘参数 ==========
 var SIZE = 13
 var MID = Math.floor(SIZE / 2)
 var W, H, cellSize, boardPx, boardX, boardY
 
 function recalcLayout() {
+  // 用系统分辨率，不依赖 canvas
   W = canvas.width || SW
   H = canvas.height || SH
-  cellSize = Math.floor(Math.min(W, H) * 0.82 / SIZE)
+  // 棋盘撑满短边 92%，留边距
+  var short = Math.min(W, H)
+  cellSize = Math.floor(short * 0.92 / SIZE)
   boardPx = SIZE * cellSize
   boardX = (W - boardPx) / 2
   boardY = (H - boardPx) / 2
