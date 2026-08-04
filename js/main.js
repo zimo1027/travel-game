@@ -13,7 +13,7 @@ var W = canvas.width
 var H = canvas.height
 
 // ========== 游戏状态 ==========
-var state = 'menu'  // menu | playing | level_complete
+var state = 'home'  // home | menu | playing | level_complete
 var levelIndex = 0
 var level = null
 var gameMap = null
@@ -32,10 +32,8 @@ function loadLevel(idx) {
   state = 'playing'
 }
 
-// ========== 返回菜单 ==========
-function goMenu() {
-  state = 'menu'
-}
+function goHome() { state = 'home' }
+function goMenu() { state = 'menu' }
 
 // ========== 检查打卡点碰撞 ==========
 function checkCheckpoints() {
@@ -70,8 +68,20 @@ function handleClicks() {
       continue
     }
 
-    // 菜单状态
+    // 首页
+    if (state === 'home') {
+      if (ui.getHomeButtonHit(c.x, c.y, W, H)) {
+        goMenu()
+      }
+      continue
+    }
+
+    // 菜单
     if (state === 'menu') {
+      if (ui.getMenuBackHit(c.x, c.y)) {
+        goHome()
+        continue
+      }
       var sel = ui.getMenuSelection(c.x, c.y, W, H)
       if (sel >= 0) {
         loadLevel(sel)
@@ -85,13 +95,13 @@ function handleClicks() {
       continue
     }
 
-    // 返回按钮区域（左上角）
+    // 游戏中——返回按钮（左上角）
     if (c.x < 120 && c.y < 100) {
       goMenu()
       continue
     }
 
-    // 游戏中点击移动
+    // 点击移动
     var world = gameMap.screenToWorld(c.x, c.y)
     var nearest = gameMap.findWalkableNear(world.x, world.y, player.radius)
     if (nearest.ok) {
@@ -123,12 +133,14 @@ function gameLoop() {
     checkCheckpoints()
   }
 
-  // ===== 绘制 =====
   ctx.clearRect(0, 0, W, H)
 
-  if (state === 'menu') {
+  if (state === 'home') {
+    ui.drawHome(ctx, W, H)
+  } else if (state === 'menu') {
     ui.drawMenu(ctx, LEVELS, W, H)
   } else {
+    // playing / level_complete
     gameMap.draw(ctx)
     gameMap.drawCheckpoints(ctx, collected)
     player.draw(ctx, gameMap.offsetX, gameMap.offsetY)

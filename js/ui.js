@@ -194,6 +194,201 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   ctx.fillText('返回首页', canvasW / 2, btnY + btnH / 2)
 }
 
+// ============ 游戏首页 ============
+function drawHome(ctx, canvasW, canvasH) {
+  var W = canvasW
+  var H = canvasH
+
+  // 深红宫殿背景
+  var bgGrad = ctx.createLinearGradient(0, 0, 0, H)
+  bgGrad.addColorStop(0, '#2D0F0F')
+  bgGrad.addColorStop(0.4, '#4A1A1A')
+  bgGrad.addColorStop(0.7, '#3E1515')
+  bgGrad.addColorStop(1, '#2D0F0F')
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, W, H)
+
+  // 金色光晕
+  var glowGrad = ctx.createRadialGradient(W * 0.5, H * 0.3, 20, W * 0.5, H * 0.35, W * 0.7)
+  glowGrad.addColorStop(0, 'rgba(212, 175, 55, 0.12)')
+  glowGrad.addColorStop(1, 'rgba(212, 175, 55, 0)')
+  ctx.fillStyle = glowGrad
+  ctx.fillRect(0, 0, W, H)
+
+  // 宫殿剪影——屋顶
+  var roofTop = H * 0.25
+  var roofCenterX = W * 0.5
+  // 主殿顶
+  ctx.fillStyle = '#C23B2A'
+  ctx.beginPath()
+  ctx.moveTo(roofCenterX, roofTop - 60)
+  ctx.lineTo(roofCenterX + 80, roofTop + 15)
+  ctx.lineTo(roofCenterX + 60, roofTop + 15)
+  ctx.lineTo(roofCenterX + 60, roofTop + 25)
+  ctx.lineTo(roofCenterX - 60, roofTop + 25)
+  ctx.lineTo(roofCenterX - 60, roofTop + 15)
+  ctx.lineTo(roofCenterX - 80, roofTop + 15)
+  ctx.closePath()
+  ctx.fill()
+  // 金色屋顶边
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(roofCenterX - 60, roofTop + 22, 120, 5)
+
+  // 左殿顶
+  ctx.fillStyle = '#A82D20'
+  ctx.beginPath()
+  ctx.moveTo(roofCenterX - 100, roofTop - 15)
+  ctx.lineTo(roofCenterX - 30, roofTop + 20)
+  ctx.lineTo(roofCenterX - 50, roofTop + 20)
+  ctx.lineTo(roofCenterX - 50, roofTop + 28)
+  ctx.lineTo(roofCenterX - 110, roofTop + 28)
+  ctx.lineTo(roofCenterX - 110, roofTop + 20)
+  ctx.lineTo(roofCenterX - 130, roofTop + 20)
+  ctx.closePath()
+  ctx.fill()
+
+  // 右殿顶
+  ctx.beginPath()
+  ctx.moveTo(roofCenterX + 100, roofTop - 15)
+  ctx.lineTo(roofCenterX + 30, roofTop + 20)
+  ctx.lineTo(roofCenterX + 50, roofTop + 20)
+  ctx.lineTo(roofCenterX + 50, roofTop + 28)
+  ctx.lineTo(roofCenterX + 110, roofTop + 28)
+  ctx.lineTo(roofCenterX + 110, roofTop + 20)
+  ctx.lineTo(roofCenterX + 130, roofTop + 20)
+  ctx.closePath()
+  ctx.fill()
+
+  // 柱子
+  ctx.fillStyle = '#8B2020'
+  var colY = roofTop + 28
+  var cols = [-46, -20, 20, 46]
+  for (var ci = 0; ci < cols.length; ci++) {
+    ctx.fillRect(roofCenterX + cols[ci], colY, 14, 80)
+    // 金色柱头
+    ctx.fillStyle = '#D4AF37'
+    ctx.fillRect(roofCenterX + cols[ci] - 2, colY, 18, 6)
+    ctx.fillStyle = '#8B2020'
+  }
+
+  // 城墙底座
+  ctx.fillStyle = '#6B1010'
+  ctx.fillRect(roofCenterX - 160, colY + 80, 320, 16)
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(roofCenterX - 160, colY + 80, 320, 3)
+
+  // 地面
+  ctx.fillStyle = '#1A0A0A'
+  ctx.fillRect(0, colY + 96, W, H - colY - 96)
+
+  // 地面装饰线
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.08)'
+  for (var li = 0; li < 6; li++) {
+    ctx.fillRect(0, colY + 96 + li * 24, W, 1)
+  }
+
+  // 灯笼
+  var lantX = roofCenterX - 120
+  drawLantern(ctx, lantX, roofTop + 40)
+  drawLantern(ctx, roofCenterX + 120, roofTop + 40)
+
+  // 祥云
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.6)'
+  drawCloud(ctx, W * 0.08, H * 0.2, 0.5)
+  drawCloud(ctx, W * 0.82, H * 0.15, 0.4)
+
+  // 标题
+  ctx.fillStyle = '#D4AF37'
+  ctx.font = 'bold 64px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  ctx.fillText('故宫深度游', W / 2, colY + 130)
+
+  // 副标题
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'
+  ctx.font = '24px sans-serif'
+  ctx.fillText('紫禁城探索之旅', W / 2, colY + 210)
+  ctx.fillText('沿中轴线 · 探秘六百年皇宫', W / 2, colY + 245)
+
+  // 开始按钮
+  var btnW = Math.min(320, W * 0.4)
+  var btnH = 72
+  var btnX = (W - btnW) / 2
+  var btnY = colY + 310
+  // 按钮光晕
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.25)'
+  ctx.beginPath()
+  ctx.roundRect(btnX - 8, btnY - 8, btnW + 16, btnH + 16, 40)
+  ctx.fill()
+  // 按钮主体
+  var btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH)
+  btnGrad.addColorStop(0, '#D4AF37')
+  btnGrad.addColorStop(1, '#B8942A')
+  ctx.fillStyle = btnGrad
+  ctx.beginPath()
+  ctx.roundRect(btnX, btnY, btnW, btnH, 36)
+  ctx.fill()
+  ctx.fillStyle = '#2D0F0F'
+  ctx.font = 'bold 32px sans-serif'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('开始游戏', W / 2, btnY + btnH / 2)
+
+  // 底部提示
+  ctx.fillStyle = 'rgba(255,255,255,0.2)'
+  ctx.font = '18px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'bottom'
+  ctx.fillText('点击上方按钮开始你的故宫之旅', W / 2, H - 30)
+}
+
+function drawLantern(ctx, x, y) {
+  // 灯线
+  ctx.strokeStyle = '#D4AF37'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(x, y - 30)
+  ctx.lineTo(x, y)
+  ctx.stroke()
+  // 灯笼体
+  ctx.fillStyle = '#E53935'
+  ctx.beginPath()
+  ctx.ellipse(x, y + 10, 10, 14, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // 金色装饰
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(x - 8, y - 2, 16, 4)
+  ctx.fillRect(x - 8, y + 20, 16, 4)
+  // 灯穗
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(x - 2, y + 24, 4, 12)
+}
+
+function drawCloud(ctx, x, y, scale) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(scale, scale)
+  ctx.beginPath()
+  ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill()
+  ctx.arc(30, -10, 22, 0, Math.PI * 2); ctx.fill()
+  ctx.arc(-30, -5, 24, 0, Math.PI * 2); ctx.fill()
+  ctx.arc(15, -20, 18, 0, Math.PI * 2); ctx.fill()
+  ctx.arc(-15, -15, 18, 0, Math.PI * 2); ctx.fill()
+  ctx.restore()
+}
+
+// 检测首页"开始游戏"按钮
+function getHomeButtonHit(x, y, canvasW, canvasH) {
+  var W = canvasW
+  var H = canvasH
+  var colY = H * 0.25 + 28 + 80 + 96  // same calculation as in drawHome
+  var btnW = Math.min(320, W * 0.4)
+  var btnH = 72
+  var btnX = (W - btnW) / 2
+  var btnY = colY + 310
+
+  return x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH
+}
+
 // ============ 主菜单 ============
 function drawMenu(ctx, levels, canvasW, canvasH) {
   var W = canvasW
@@ -313,6 +508,21 @@ function drawMenu(ctx, levels, canvasW, canvasH) {
   ctx.font = '18px sans-serif'
   ctx.textAlign = 'center'
   ctx.fillText('点击卡片选择难度，开始你的故宫之旅', W / 2, H * 0.96)
+
+  // 返回按钮
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'
+  ctx.beginPath()
+  ctx.roundRect(16, 16, 96, 48, 24)
+  ctx.fill()
+  ctx.fillStyle = '#FFF'
+  ctx.font = '22px sans-serif'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('← 返回', 64, 40)
+}
+
+// 检测菜单返回按钮
+function getMenuBackHit(x, y) {
+  return x >= 16 && x <= 112 && y >= 16 && y <= 64
 }
 
 // 检测菜单点击，返回被选中的难度索引，-1表示未命中
@@ -340,6 +550,9 @@ module.exports = {
   drawHUD: drawHUD,
   drawPopup: drawPopup,
   drawLevelComplete: drawLevelComplete,
+  drawHome: drawHome,
+  getHomeButtonHit: getHomeButtonHit,
   drawMenu: drawMenu,
   getMenuSelection: getMenuSelection,
+  getMenuBackHit: getMenuBackHit,
 }
