@@ -160,7 +160,7 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
 
   // 主体（响应式）
   var pw = Math.min(500, canvasW * 0.85)
-  var ph = Math.min(420, canvasH * 0.55)
+  var ph = Math.min(380, canvasH * 0.55)
   var px = (canvasW - pw) / 2
   var py = (canvasH - ph) / 2
   ctx.fillStyle = '#FFF'
@@ -172,28 +172,14 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   ctx.font = '56px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('🎉', canvasW / 2, py + 64)
+  ctx.fillText('🎉', canvasW / 2, py + 56)
 
   // 标题
   ctx.fillStyle = '#333'
-  ctx.font = 'bold 36px sans-serif'
-  ctx.fillText('恭喜通关！', canvasW / 2, py + 140)
+  ctx.font = 'bold 34px sans-serif'
+  ctx.fillText('恭喜通关！', canvasW / 2, py + 130)
 
-  // 下一站
-  if (nextLevel) {
-    ctx.fillStyle = '#666'
-    ctx.font = '24px sans-serif'
-    ctx.fillText('下一站', canvasW / 2, py + 196)
-    ctx.fillStyle = '#FF9800'
-    ctx.font = 'bold 32px sans-serif'
-    ctx.fillText(nextLevel.name + ' · ' + nextLevel.subtitle, canvasW / 2, py + 236)
-  } else {
-    ctx.fillStyle = '#666'
-    ctx.font = '24px sans-serif'
-    ctx.fillText('你已经完成了全部旅程！', canvasW / 2, py + 216)
-  }
-
-  // 按钮
+  // 返回菜单按钮
   var btnW = pw * 0.5
   var btnH = 64
   var btnX = (canvasW - btnW) / 2
@@ -205,23 +191,146 @@ function drawLevelComplete(ctx, nextLevel, canvasW, canvasH) {
   ctx.fillStyle = '#FFF'
   ctx.font = 'bold 26px sans-serif'
   ctx.textBaseline = 'middle'
-  ctx.fillText(nextLevel ? '出发！' : '再玩一次', canvasW / 2, btnY + btnH / 2)
+  ctx.fillText('返回首页', canvasW / 2, btnY + btnH / 2)
 }
 
-function wrapText(ctx, text, maxWidth) {
-  var lines = []
-  var current = ''
-  for (var i = 0; i < text.length; i++) {
-    var test = current + text[i]
-    if (ctx.measureText(test).width > maxWidth && current.length > 0) {
-      lines.push(current)
-      current = text[i]
-    } else {
-      current = test
+// ============ 主菜单 ============
+function drawMenu(ctx, levels, canvasW, canvasH) {
+  var W = canvasW
+  var H = canvasH
+
+  // 背景
+  var bgGrad = ctx.createLinearGradient(0, 0, W, H)
+  bgGrad.addColorStop(0, '#3E1F1F')
+  bgGrad.addColorStop(0.5, '#5C2A2A')
+  bgGrad.addColorStop(1, '#3E1F1F')
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, W, H)
+
+  // 装饰纹理
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.03)'
+  for (var i = 0; i < 20; i++) {
+    ctx.beginPath()
+    ctx.arc(W * 0.2 + i * 37, H * 0.3 + (i % 3) * 40, 80, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  // 标题
+  ctx.fillStyle = '#D4AF37'
+  ctx.font = 'bold 52px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  ctx.fillText('故宫深度游', W / 2, H * 0.06)
+
+  // 副标题
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'
+  ctx.font = '22px sans-serif'
+  ctx.fillText('选择你的游览难度', W / 2, H * 0.17)
+
+  // 三张难度卡片
+  var cardW = Math.min(340, W * 0.28)
+  var cardH = Math.min(420, H * 0.68)
+  var gap = (W - cardW * 3) / 4
+  var cardY = H * 0.26
+
+  var configs = [
+    { icon: '🚶', color: '#4CAF50', name: '浅度游玩', desc: '中轴线精华', points: '4个景点', time: '约2小时', accent: 'green' },
+    { icon: '🏃', color: '#FF9800', name: '中度游玩', desc: '中轴线标准游', points: '6个景点', time: '约3小时', accent: 'orange' },
+    { icon: '🧗', color: '#E53935', name: '深度游玩', desc: '中轴线+侧翼全览', points: '14个景点', time: '约6小时', accent: 'red' },
+  ]
+
+  for (var j = 0; j < 3; j++) {
+    var cfg = configs[j]
+    var cx = gap + j * (cardW + gap)
+
+    // 卡片阴影
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'
+    ctx.beginPath()
+    ctx.roundRect(cx + 4, cardY + 4, cardW, cardH, 20)
+    ctx.fill()
+
+    // 卡片背景
+    var cardGrad = ctx.createLinearGradient(cx, cardY, cx, cardY + cardH)
+    cardGrad.addColorStop(0, '#2A1F1F')
+    cardGrad.addColorStop(1, '#1F1515')
+    ctx.fillStyle = cardGrad
+    ctx.beginPath()
+    ctx.roundRect(cx, cardY, cardW, cardH, 20)
+    ctx.fill()
+
+    // 顶部色条
+    ctx.fillStyle = cfg.color
+    ctx.beginPath()
+    ctx.roundRect(cx + 10, cardY + 20, cardW - 20, 6, 3)
+    ctx.fill()
+
+    // 图标
+    ctx.font = '64px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(cfg.icon, cx + cardW / 2, cardY + 50)
+
+    // 名称
+    ctx.fillStyle = '#FFF'
+    ctx.font = 'bold 30px sans-serif'
+    ctx.fillText(cfg.name, cx + cardW / 2, cardY + 130)
+
+    // 描述
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    ctx.font = '20px sans-serif'
+    ctx.fillText(cfg.desc, cx + cardW / 2, cardY + 170)
+
+    // 分隔线
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(cx + 30, cardY + 200)
+    ctx.lineTo(cx + cardW - 30, cardY + 200)
+    ctx.stroke()
+
+    // 信息
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.font = '22px sans-serif'
+    ctx.fillText('📍 ' + cfg.points, cx + cardW / 2, cardY + 230)
+    ctx.fillText('⏱ ' + cfg.time, cx + cardW / 2, cardY + 265)
+
+    // 按钮
+    var btnW2 = cardW * 0.55
+    var btnH2 = 52
+    var btnX2 = cx + (cardW - btnW2) / 2
+    var btnY2 = cardY + cardH - 80
+    ctx.fillStyle = cfg.color
+    ctx.beginPath()
+    ctx.roundRect(btnX2, btnY2, btnW2, btnH2, 26)
+    ctx.fill()
+    ctx.fillStyle = '#FFF'
+    ctx.font = 'bold 24px sans-serif'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('开始游览', cx + cardW / 2, btnY2 + btnH2 / 2)
+  }
+
+  // 底部文字
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'
+  ctx.font = '18px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('点击卡片选择难度，开始你的故宫之旅', W / 2, H * 0.96)
+}
+
+// 检测菜单点击，返回被选中的难度索引，-1表示未命中
+function getMenuSelection(x, y, canvasW, canvasH) {
+  var W = canvasW
+  var H = canvasH
+  var cardW = Math.min(340, W * 0.28)
+  var cardH = Math.min(420, H * 0.68)
+  var gap = (W - cardW * 3) / 4
+  var cardY = H * 0.26
+
+  for (var i = 0; i < 3; i++) {
+    var cx = gap + i * (cardW + gap)
+    if (x >= cx && x <= cx + cardW && y >= cardY && y <= cardY + cardH) {
+      return i
     }
   }
-  if (current) lines.push(current)
-  return lines
+  return -1
 }
 
 module.exports = {
@@ -231,4 +340,6 @@ module.exports = {
   drawHUD: drawHUD,
   drawPopup: drawPopup,
   drawLevelComplete: drawLevelComplete,
+  drawMenu: drawMenu,
+  getMenuSelection: getMenuSelection,
 }
