@@ -1,4 +1,5 @@
 // 故宫深度游 — 主入口
+require('./polyfill')
 var Player = require('./player')
 var mapMod = require('./map')
 var Input = require('./input')

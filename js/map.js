@@ -15,6 +15,7 @@ function Map(level) {
       y: 30 + (i * 211 + 83) % (level.height - 60),
       r: 4 + (i % 6),
       type: i % 4, // 0:小花 1:草丛 2:灌木 3:落叶
+      rot: (i * 137 + 59) % 360 * Math.PI / 180, // 固定旋转角
     })
   }
 }
@@ -152,7 +153,7 @@ Map.prototype.draw = function (ctx) {
     } else {
       ctx.fillStyle = '#C8A052'
       ctx.beginPath()
-      ctx.ellipse(dx, dy, dc.r, dc.r * 0.5, Math.random() * Math.PI, 0, Math.PI * 2)
+      ctx.ellipse(dx, dy, dc.r, dc.r * 0.5, dc.rot, 0, Math.PI * 2)
       ctx.fill()
     }
   }
