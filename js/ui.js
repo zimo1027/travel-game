@@ -376,16 +376,27 @@ function drawCloud(ctx, x, y, scale) {
   ctx.restore()
 }
 
-// 检测首页"开始游戏"按钮
+// 检测首页"开始游戏"按钮（扩大点击区域 + 下半屏兜底）
 function getHomeButtonHit(x, y, canvasW, canvasH) {
   var W = canvasW
   var H = canvasH
-  var btnY = H * 0.25 + 338  // roofTop + colY偏移 + 310
-  var btnW = Math.min(320, W * 0.4)
-  var btnH = 72
+
+  // 精确按钮区域（加大容差）
+  var btnY = H * 0.58
+  var btnW = Math.min(400, W * 0.5)
+  var btnH = 100
   var btnX = (W - btnW) / 2
 
-  return x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH
+  if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
+    return true
+  }
+
+  // 兜底：点击屏幕下半部分任意位置也触发
+  if (y > H * 0.5) {
+    return true
+  }
+
+  return false
 }
 
 // ============ 主菜单 ============
