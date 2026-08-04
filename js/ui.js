@@ -199,203 +199,257 @@ function drawHome(ctx, canvasW, canvasH) {
   var W = canvasW
   var H = canvasH
 
-  // 深红宫殿背景
-  var bgGrad = ctx.createLinearGradient(0, 0, 0, H)
-  bgGrad.addColorStop(0, '#2D0F0F')
-  bgGrad.addColorStop(0.4, '#4A1A1A')
-  bgGrad.addColorStop(0.7, '#3E1515')
-  bgGrad.addColorStop(1, '#2D0F0F')
+  // === 背景 ===
+  var bgGrad = ctx.createLinearGradient(0, 0, W, 0)
+  bgGrad.addColorStop(0, '#1A0A0A')
+  bgGrad.addColorStop(0.5, '#2D1515')
+  bgGrad.addColorStop(1, '#1A0A0A')
   ctx.fillStyle = bgGrad
   ctx.fillRect(0, 0, W, H)
 
-  // 金色光晕
-  var glowGrad = ctx.createRadialGradient(W * 0.5, H * 0.3, 20, W * 0.5, H * 0.35, W * 0.7)
-  glowGrad.addColorStop(0, 'rgba(212, 175, 55, 0.12)')
-  glowGrad.addColorStop(1, 'rgba(212, 175, 55, 0)')
-  ctx.fillStyle = glowGrad
-  ctx.fillRect(0, 0, W, H)
+  // === 上半部：宫殿装饰区 ===
+  var decorY = 0
+  var decorH = H * 0.52
 
-  // 宫殿剪影——屋顶
-  var roofTop = H * 0.25
-  var roofCenterX = W * 0.5
-  // 主殿顶
-  ctx.fillStyle = '#C23B2A'
-  ctx.beginPath()
-  ctx.moveTo(roofCenterX, roofTop - 60)
-  ctx.lineTo(roofCenterX + 80, roofTop + 15)
-  ctx.lineTo(roofCenterX + 60, roofTop + 15)
-  ctx.lineTo(roofCenterX + 60, roofTop + 25)
-  ctx.lineTo(roofCenterX - 60, roofTop + 25)
-  ctx.lineTo(roofCenterX - 60, roofTop + 15)
-  ctx.lineTo(roofCenterX - 80, roofTop + 15)
-  ctx.closePath()
-  ctx.fill()
-  // 金色屋顶边
+  // 宫墙底色
+  ctx.fillStyle = '#6B1515'
+  ctx.fillRect(0, decorY, W, decorH)
+
+  // 墙砖纹理
+  ctx.fillStyle = 'rgba(0,0,0,0.08)'
+  for (var wy = decorY; wy < decorH; wy += 24) {
+    ctx.fillRect(0, wy, W, 1)
+    for (var wx = 0; wx < W; wx += 60) {
+      if ((wy / 24) % 2 === 1) {
+        ctx.fillRect(wx + 30, wy, 1, 1)
+      }
+    }
+  }
+
+  // 金色宫墙顶线
   ctx.fillStyle = '#D4AF37'
-  ctx.fillRect(roofCenterX - 60, roofTop + 22, 120, 5)
+  ctx.fillRect(0, decorY, W, 4)
+  ctx.fillRect(0, decorY + decorH - 4, W, 4)
 
-  // 左殿顶
-  ctx.fillStyle = '#A82D20'
-  ctx.beginPath()
-  ctx.moveTo(roofCenterX - 100, roofTop - 15)
-  ctx.lineTo(roofCenterX - 30, roofTop + 20)
-  ctx.lineTo(roofCenterX - 50, roofTop + 20)
-  ctx.lineTo(roofCenterX - 50, roofTop + 28)
-  ctx.lineTo(roofCenterX - 110, roofTop + 28)
-  ctx.lineTo(roofCenterX - 110, roofTop + 20)
-  ctx.lineTo(roofCenterX - 130, roofTop + 20)
-  ctx.closePath()
-  ctx.fill()
+  // === 太和殿剪影（中央） ===
+  var bx = W / 2
+  var by = decorY + decorH * 0.42
 
-  // 右殿顶
-  ctx.beginPath()
-  ctx.moveTo(roofCenterX + 100, roofTop - 15)
-  ctx.lineTo(roofCenterX + 30, roofTop + 20)
-  ctx.lineTo(roofCenterX + 50, roofTop + 20)
-  ctx.lineTo(roofCenterX + 50, roofTop + 28)
-  ctx.lineTo(roofCenterX + 110, roofTop + 28)
-  ctx.lineTo(roofCenterX + 110, roofTop + 20)
-  ctx.lineTo(roofCenterX + 130, roofTop + 20)
-  ctx.closePath()
-  ctx.fill()
+  // 三层基座
+  for (var s = 0; s < 3; s++) {
+    var sw = 320 + s * 60
+    ctx.fillStyle = s === 0 ? '#E8D5B5' : s === 1 ? '#DDC8A0' : '#D0BC90'
+    ctx.beginPath()
+    ctx.roundRect(bx - sw / 2, by + s * 10, sw, 14, 6)
+    ctx.fill()
+  }
+
+  // 殿身
+  ctx.fillStyle = '#B84030'
+  ctx.fillRect(bx - 100, by - 50, 200, 70)
+
+  // 殿门（三扇）
+  ctx.fillStyle = '#2D0F0F'
+  ctx.fillRect(bx - 36, by - 50, 24, 70)
+  ctx.fillRect(bx - 12, by - 50, 24, 70)
+  ctx.fillRect(bx + 12, by - 50, 24, 70)
 
   // 柱子
-  ctx.fillStyle = '#8B2020'
-  var colY = roofTop + 28
-  var cols = [-46, -20, 20, 46]
-  for (var ci = 0; ci < cols.length; ci++) {
-    ctx.fillRect(roofCenterX + cols[ci], colY, 14, 80)
-    // 金色柱头
-    ctx.fillStyle = '#D4AF37'
-    ctx.fillRect(roofCenterX + cols[ci] - 2, colY, 18, 6)
-    ctx.fillStyle = '#8B2020'
-  }
+  ctx.fillStyle = '#C23B2A'
+  ctx.fillRect(bx - 104, by - 50, 8, 70)
+  ctx.fillRect(bx - 70, by - 50, 8, 70)
+  ctx.fillRect(bx - 30, by - 50, 8, 70)
+  ctx.fillRect(bx - 6, by - 50, 8, 70)
+  ctx.fillRect(bx + 22, by - 50, 8, 70)
+  ctx.fillRect(bx + 62, by - 50, 8, 70)
+  ctx.fillRect(bx + 98, by - 50, 8, 70)
 
-  // 城墙底座
-  ctx.fillStyle = '#6B1010'
-  ctx.fillRect(roofCenterX - 160, colY + 80, 320, 16)
+  // 屋檐
   ctx.fillStyle = '#D4AF37'
-  ctx.fillRect(roofCenterX - 160, colY + 80, 320, 3)
+  ctx.fillRect(bx - 120, by - 58, 240, 8)
 
-  // 地面
-  ctx.fillStyle = '#1A0A0A'
-  ctx.fillRect(0, colY + 96, W, H - colY - 96)
+  // 屋顶（重檐）
+  ctx.fillStyle = '#8B2020'
+  ctx.beginPath()
+  ctx.moveTo(bx, by - 110)
+  ctx.lineTo(bx + 140, by - 48)
+  ctx.lineTo(bx + 50, by - 50)
+  ctx.lineTo(bx + 50, by - 38)
+  ctx.lineTo(bx - 50, by - 38)
+  ctx.lineTo(bx - 50, by - 50)
+  ctx.lineTo(bx - 140, by - 48)
+  ctx.closePath()
+  ctx.fill()
 
-  // 地面装饰线
-  ctx.fillStyle = 'rgba(212, 175, 55, 0.08)'
-  for (var li = 0; li < 6; li++) {
-    ctx.fillRect(0, colY + 96 + li * 24, W, 1)
-  }
+  // 金色屋顶边
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(bx - 50, by - 42, 100, 4)
 
-  // 灯笼
-  var lantX = roofCenterX - 120
-  drawLantern(ctx, lantX, roofTop + 40)
-  drawLantern(ctx, roofCenterX + 120, roofTop + 40)
+  // 屋脊
+  ctx.fillStyle = '#D4AF37'
+  ctx.beginPath()
+  ctx.arc(bx, by - 110, 6, 0, Math.PI * 2)
+  ctx.fill()
 
-  // 祥云
-  ctx.fillStyle = 'rgba(212, 175, 55, 0.6)'
-  drawCloud(ctx, W * 0.08, H * 0.2, 0.5)
-  drawCloud(ctx, W * 0.82, H * 0.15, 0.4)
+  // === 左右侧殿 ===
+  // 左殿
+  var lx = bx - 200
+  ctx.fillStyle = '#9B2820'
+  ctx.fillRect(lx - 50, by - 5, 100, 38)
+  ctx.fillStyle = '#C23B2A'
+  ctx.fillRect(lx - 54, by - 5, 4, 38)
+  ctx.fillRect(lx - 28, by - 5, 4, 38)
+  ctx.fillRect(lx + 24, by - 5, 4, 38)
+  ctx.fillRect(lx + 50, by - 5, 4, 38)
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(lx - 62, by - 10, 124, 5)
+  ctx.fillStyle = '#6B1515'
+  ctx.beginPath()
+  ctx.moveTo(lx, by - 38)
+  ctx.lineTo(lx + 60, by - 5)
+  ctx.lineTo(lx - 60, by - 5)
+  ctx.closePath()
+  ctx.fill()
+
+  // 右殿（对称）
+  var rx = bx + 200
+  ctx.fillStyle = '#9B2820'
+  ctx.fillRect(rx - 50, by - 5, 100, 38)
+  ctx.fillStyle = '#C23B2A'
+  ctx.fillRect(rx - 54, by - 5, 4, 38)
+  ctx.fillRect(rx - 28, by - 5, 4, 38)
+  ctx.fillRect(rx + 24, by - 5, 4, 38)
+  ctx.fillRect(rx + 50, by - 5, 4, 38)
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(rx - 62, by - 10, 124, 5)
+  ctx.fillStyle = '#6B1515'
+  ctx.beginPath()
+  ctx.moveTo(rx, by - 38)
+  ctx.lineTo(rx + 60, by - 5)
+  ctx.lineTo(rx - 60, by - 5)
+  ctx.closePath()
+  ctx.fill()
+
+  // === 灯笼 ===
+  drawHomeLantern(ctx, bx - 240, decorY + decorH * 0.3)
+  drawHomeLantern(ctx, bx + 240, decorY + decorH * 0.3)
+  drawHomeLantern(ctx, bx - 240, decorY + decorH * 0.55)
+  drawHomeLantern(ctx, bx + 240, decorY + decorH * 0.55)
+
+  // === 分隔金色横线 ===
+  ctx.fillStyle = '#D4AF37'
+  ctx.fillRect(W * 0.1, decorY + decorH + 4, W * 0.8, 2)
+
+  // === 下半部：文字区 ===
+  var textY = decorY + decorH + 24
 
   // 标题
   ctx.fillStyle = '#D4AF37'
-  ctx.font = 'bold 64px sans-serif'
+  ctx.font = 'bold 58px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('故宫深度游', W / 2, colY + 130)
+  ctx.fillText('故宫深度游', W / 2, textY)
 
   // 副标题
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'
   ctx.font = '24px sans-serif'
-  ctx.fillText('紫禁城探索之旅', W / 2, colY + 210)
-  ctx.fillText('沿中轴线 · 探秘六百年皇宫', W / 2, colY + 245)
+  ctx.fillText('沿中轴线 · 探秘六百年紫禁城', W / 2, textY + 76)
 
-  // 开始按钮
-  var btnW = Math.min(320, W * 0.4)
-  var btnH = 72
+  // 三行特征
+  var features = [
+    { icon: '📍', text: '真实故宫中轴线布局' },
+    { icon: '📖', text: '收录14处核心景点介绍' },
+    { icon: '🎯', text: '浅度·中度·深度 三档难度' },
+  ]
+  var featStartY = textY + 130
+  var featGap = (W - 80) / 3
+  for (var fi = 0; fi < 3; fi++) {
+    var fx = 40 + featGap * fi + featGap / 2
+    ctx.fillStyle = 'rgba(255,255,255,0.15)'
+    ctx.beginPath()
+    ctx.roundRect(fx - featGap / 2 + 12, featStartY - 8, featGap - 24, 70, 14)
+    ctx.fill()
+    ctx.fillStyle = '#FFF'
+    ctx.font = '30px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    ctx.fillText(features[fi].icon, fx, featStartY)
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.font = '18px sans-serif'
+    ctx.fillText(features[fi].text, fx, featStartY + 40)
+  }
+
+  // === 开始按钮 ===
+  var btnW = Math.min(340, W * 0.38)
+  var btnH = 76
   var btnX = (W - btnW) / 2
-  var btnY = colY + 310
-  // 按钮光晕
-  ctx.fillStyle = 'rgba(212, 175, 55, 0.25)'
-  ctx.beginPath()
-  ctx.roundRect(btnX - 8, btnY - 8, btnW + 16, btnH + 16, 40)
-  ctx.fill()
-  // 按钮主体
+  var btnY = featStartY + 110
+
+  // 光晕
+  var haloGrad = ctx.createRadialGradient(W / 2, btnY + btnH / 2, btnW * 0.2, W / 2, btnY + btnH / 2, btnW * 0.7)
+  haloGrad.addColorStop(0, 'rgba(212, 175, 55, 0.2)')
+  haloGrad.addColorStop(1, 'rgba(212, 175, 55, 0)')
+  ctx.fillStyle = haloGrad
+  ctx.fillRect(btnX - 40, btnY - 30, btnW + 80, btnH + 60)
+
+  // 按钮
   var btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH)
   btnGrad.addColorStop(0, '#D4AF37')
-  btnGrad.addColorStop(1, '#B8942A')
+  btnGrad.addColorStop(1, '#A88520')
   ctx.fillStyle = btnGrad
   ctx.beginPath()
-  ctx.roundRect(btnX, btnY, btnW, btnH, 36)
+  ctx.roundRect(btnX, btnY, btnW, btnH, 38)
   ctx.fill()
-  ctx.fillStyle = '#2D0F0F'
-  ctx.font = 'bold 32px sans-serif'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('开始游戏', W / 2, btnY + btnH / 2)
 
-  // 底部提示
-  ctx.fillStyle = 'rgba(255,255,255,0.2)'
-  ctx.font = '18px sans-serif'
+  ctx.fillStyle = '#1A0A0A'
+  ctx.font = 'bold 34px sans-serif'
+  ctx.textBaseline = 'middle'
   ctx.textAlign = 'center'
+  ctx.fillText('开 始 游 览', W / 2, btnY + btnH / 2)
+
+  // 底部版本号
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'
+  ctx.font = '16px sans-serif'
   ctx.textBaseline = 'bottom'
-  ctx.fillText('点击上方按钮开始你的故宫之旅', W / 2, H - 30)
+  ctx.fillText('v1.0  ·  故宫博物院', W / 2, H - 16)
 }
 
-function drawLantern(ctx, x, y) {
-  // 灯线
-  ctx.strokeStyle = '#D4AF37'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(x, y - 30)
-  ctx.lineTo(x, y)
-  ctx.stroke()
-  // 灯笼体
+function drawHomeLantern(ctx, x, y) {
+  // 挂杆
+  ctx.fillStyle = '#5D4037'
+  ctx.fillRect(x - 1, y - 16, 2, 18)
+  // 灯笼
   ctx.fillStyle = '#E53935'
   ctx.beginPath()
-  ctx.ellipse(x, y + 10, 10, 14, 0, 0, Math.PI * 2)
+  ctx.ellipse(x, y + 4, 9, 14, 0, 0, Math.PI * 2)
   ctx.fill()
-  // 金色装饰
   ctx.fillStyle = '#D4AF37'
-  ctx.fillRect(x - 8, y - 2, 16, 4)
-  ctx.fillRect(x - 8, y + 20, 16, 4)
-  // 灯穗
-  ctx.fillStyle = '#D4AF37'
-  ctx.fillRect(x - 2, y + 24, 4, 12)
-}
-
-function drawCloud(ctx, x, y, scale) {
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.scale(scale, scale)
+  ctx.fillRect(x - 7, y - 8, 14, 4)
+  ctx.fillRect(x - 7, y + 12, 14, 4)
+  // 高光
+  ctx.fillStyle = 'rgba(255,255,255,0.2)'
   ctx.beginPath()
-  ctx.arc(0, 0, 30, 0, Math.PI * 2); ctx.fill()
-  ctx.arc(30, -10, 22, 0, Math.PI * 2); ctx.fill()
-  ctx.arc(-30, -5, 24, 0, Math.PI * 2); ctx.fill()
-  ctx.arc(15, -20, 18, 0, Math.PI * 2); ctx.fill()
-  ctx.arc(-15, -15, 18, 0, Math.PI * 2); ctx.fill()
-  ctx.restore()
+  ctx.arc(x - 2, y, 4, 0, Math.PI * 2)
+  ctx.fill()
 }
 
-// 检测首页"开始游戏"按钮（扩大点击区域 + 下半屏兜底）
+// 检测首页按钮点击
 function getHomeButtonHit(x, y, canvasW, canvasH) {
   var W = canvasW
   var H = canvasH
-
-  // 精确按钮区域（加大容差）
-  var btnY = H * 0.58
-  var btnW = Math.min(400, W * 0.5)
-  var btnH = 100
+  var btnW = Math.min(340, W * 0.38)
+  var btnH = 76
   var btnX = (W - btnW) / 2
+  // btnY: decorH = H*0.52, textY=decorH+24, title gap +130, then +110
+  var btnY = H * 0.52 + 24 + 76 + 130 + 110
 
-  if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
+  if (x >= btnX - 20 && x <= btnX + btnW + 20 && y >= btnY - 10 && y <= btnY + btnH + 10) {
     return true
   }
-
-  // 兜底：点击屏幕下半部分任意位置也触发
-  if (y > H * 0.5) {
+  // 兜底：按钮附近大区域
+  if (y > H * 0.72) {
     return true
   }
-
   return false
 }
 
