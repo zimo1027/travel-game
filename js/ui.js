@@ -207,9 +207,9 @@ function drawHome(ctx, canvasW, canvasH) {
   ctx.fillStyle = bgGrad
   ctx.fillRect(0, 0, W, H)
 
-  // === 上半部：宫殿装饰区 ===
+  // === 上半部：宫殿装饰区（占剩余空间） ===
   var decorY = 0
-  var decorH = H * 0.52
+  var decorH = Math.min(H * 0.48, H - 320)
 
   // 宫墙底色
   ctx.fillStyle = '#6B1515'
@@ -337,23 +337,37 @@ function drawHome(ctx, canvasW, canvasH) {
   drawHomeLantern(ctx, bx + 240, decorY + decorH * 0.55)
 
   // === 分隔金色横线 ===
+  var divY = decorY + decorH
   ctx.fillStyle = '#D4AF37'
-  ctx.fillRect(W * 0.1, decorY + decorH + 4, W * 0.8, 2)
+  ctx.fillRect(W * 0.1, divY + 2, W * 0.8, 2)
 
-  // === 下半部：文字区 ===
-  var textY = decorY + decorH + 24
+  // === 下半部：从底部往上排 ===
+  // 按钮（固定在底部上方）
+  var btnH = Math.min(76, H * 0.1)
+  var btnW = Math.min(340, W * 0.38)
+  var btnX = (W - btnW) / 2
+  var btnY = H - btnH - H * 0.06
+
+  // 特性区域
+  var featH = Math.min(70, H * 0.1)
+  var featY = btnY - featH - H * 0.04
+
+  // 标题区
+  var titleY = divY + 16
+  var nameH = featY - titleY
 
   // 标题
+  var titleSize = Math.min(58, nameH * 0.55)
   ctx.fillStyle = '#D4AF37'
-  ctx.font = 'bold 58px sans-serif'
+  ctx.font = 'bold ' + titleSize + 'px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('故宫深度游', W / 2, textY)
+  ctx.fillText('故宫深度游', W / 2, titleY)
 
   // 副标题
   ctx.fillStyle = 'rgba(255,255,255,0.45)'
-  ctx.font = '24px sans-serif'
-  ctx.fillText('沿中轴线 · 探秘六百年紫禁城', W / 2, textY + 76)
+  ctx.font = Math.min(24, titleSize * 0.4) + 'px sans-serif'
+  ctx.fillText('沿中轴线 · 探秘六百年紫禁城', W / 2, titleY + titleSize + 8)
 
   // 三行特征
   var features = [
@@ -361,36 +375,30 @@ function drawHome(ctx, canvasW, canvasH) {
     { icon: '📖', text: '收录14处核心景点介绍' },
     { icon: '🎯', text: '浅度·中度·深度 三档难度' },
   ]
-  var featStartY = textY + 130
   var featGap = (W - 80) / 3
+  var featFont = Math.min(18, H * 0.025)
   for (var fi = 0; fi < 3; fi++) {
     var fx = 40 + featGap * fi + featGap / 2
     ctx.fillStyle = 'rgba(255,255,255,0.15)'
     ctx.beginPath()
-    ctx.roundRect(fx - featGap / 2 + 12, featStartY - 8, featGap - 24, 70, 14)
+    ctx.roundRect(fx - featGap / 2 + 12, featY - 4, featGap - 24, featH, 12)
     ctx.fill()
     ctx.fillStyle = '#FFF'
-    ctx.font = '30px sans-serif'
+    ctx.font = Math.min(30, H * 0.05) + 'px sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'top'
-    ctx.fillText(features[fi].icon, fx, featStartY)
+    ctx.fillText(features[fi].icon, fx, featY + 4)
     ctx.fillStyle = 'rgba(255,255,255,0.55)'
-    ctx.font = '18px sans-serif'
-    ctx.fillText(features[fi].text, fx, featStartY + 40)
+    ctx.font = featFont + 'px sans-serif'
+    ctx.fillText(features[fi].text, fx, featY + featH * 0.5 + 4)
   }
 
-  // === 开始按钮 ===
-  var btnW = Math.min(340, W * 0.38)
-  var btnH = 76
-  var btnX = (W - btnW) / 2
-  var btnY = featStartY + 110
-
-  // 光晕
+  // 按钮光晕
   var haloGrad = ctx.createRadialGradient(W / 2, btnY + btnH / 2, btnW * 0.2, W / 2, btnY + btnH / 2, btnW * 0.7)
   haloGrad.addColorStop(0, 'rgba(212, 175, 55, 0.2)')
   haloGrad.addColorStop(1, 'rgba(212, 175, 55, 0)')
   ctx.fillStyle = haloGrad
-  ctx.fillRect(btnX - 40, btnY - 30, btnW + 80, btnH + 60)
+  ctx.fillRect(btnX - 40, btnY - 20, btnW + 80, btnH + 40)
 
   // 按钮
   var btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH)
@@ -398,11 +406,11 @@ function drawHome(ctx, canvasW, canvasH) {
   btnGrad.addColorStop(1, '#A88520')
   ctx.fillStyle = btnGrad
   ctx.beginPath()
-  ctx.roundRect(btnX, btnY, btnW, btnH, 38)
+  ctx.roundRect(btnX, btnY, btnW, btnH, btnH / 2)
   ctx.fill()
 
   ctx.fillStyle = '#1A0A0A'
-  ctx.font = 'bold 34px sans-serif'
+  ctx.font = 'bold ' + Math.min(34, btnH * 0.45) + 'px sans-serif'
   ctx.textBaseline = 'middle'
   ctx.textAlign = 'center'
   ctx.fillText('开 始 游 览', W / 2, btnY + btnH / 2)
@@ -435,19 +443,17 @@ function drawHomeLantern(ctx, x, y) {
 
 // 检测首页按钮点击
 function getHomeButtonHit(x, y, canvasW, canvasH) {
-  var W = canvasW
-  var H = canvasH
-  var btnW = Math.min(340, W * 0.38)
-  var btnH = 76
-  var btnX = (W - btnW) / 2
-  // btnY: decorH = H*0.52, textY=decorH+24, title gap +130, then +110
-  var btnY = H * 0.52 + 24 + 76 + 130 + 110
+  // 按钮匹配 drawHome 中的位置：btnY = H - btnH - H*0.06
+  var btnH = Math.min(76, canvasH * 0.1)
+  var btnW = Math.min(340, canvasW * 0.38)
+  var btnX = (canvasW - btnW) / 2
+  var btnY = canvasH - btnH - canvasH * 0.06
 
-  if (x >= btnX - 20 && x <= btnX + btnW + 20 && y >= btnY - 10 && y <= btnY + btnH + 10) {
+  if (x >= btnX - 30 && x <= btnX + btnW + 30 && y >= btnY - 10 && y <= btnY + btnH + 30) {
     return true
   }
-  // 兜底：按钮附近大区域
-  if (y > H * 0.72) {
+  // 兜底：底部 1/5 区域
+  if (y > canvasH * 0.82) {
     return true
   }
   return false
