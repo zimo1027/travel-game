@@ -91,11 +91,17 @@ function findPath(sr, sc, er, ec) {
 }
 
 // ========== 触摸事件 ==========
-wx.onTouchStart(function (e) {
-  if (e.touches.length === 0) return
+canvas.addEventListener('touchstart', function (e) {
+  if (!e.touches || e.touches.length === 0) return
   var t = e.touches[0]
-  var col = Math.floor((t.x - offsetX) / cellSize)
-  var row = Math.floor((t.y - offsetY) / cellSize)
+  var rect = canvas.getBoundingClientRect()
+  var scaleX = canvas.width / rect.width
+  var scaleY = canvas.height / rect.height
+  var touchX = (t.clientX - rect.left) * scaleX
+  var touchY = (t.clientY - rect.top) * scaleY
+
+  var col = Math.floor((touchX - offsetX) / cellSize)
+  var row = Math.floor((touchY - offsetY) / cellSize)
 
   if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return
   if (gridData[row][col] === 1) return  // 障碍
