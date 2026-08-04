@@ -380,11 +380,10 @@ function drawCloud(ctx, x, y, scale) {
 function getHomeButtonHit(x, y, canvasW, canvasH) {
   var W = canvasW
   var H = canvasH
-  var colY = H * 0.25 + 28 + 80 + 96  // same calculation as in drawHome
+  var btnY = H * 0.25 + 338  // roofTop + colY偏移 + 310
   var btnW = Math.min(320, W * 0.4)
   var btnH = 72
   var btnX = (W - btnW) / 2
-  var btnY = colY + 310
 
   return x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH
 }
