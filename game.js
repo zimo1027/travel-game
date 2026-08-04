@@ -2,21 +2,20 @@
 var canvas = wx.createCanvas()
 var ctx = canvas.getContext('2d')
 
-// ========== 屏幕尺寸 ==========
+// ========== 屏幕尺寸（统一用系统逻辑像素） ==========
 var sysInfo = wx.getSystemInfoSync()
-var SW = sysInfo.windowWidth
-var SH = sysInfo.windowHeight
+var W = sysInfo.windowWidth
+var H = sysInfo.windowHeight
 
 // ========== 13x13 棋盘参数 ==========
 var SIZE = 13
 var MID = Math.floor(SIZE / 2)
-var W, H, cellSize, boardPx, boardX, boardY
+var cellSize, boardPx, boardX, boardY
 
 function recalcLayout() {
-  // 用系统分辨率，不依赖 canvas
-  W = canvas.width || SW
-  H = canvas.height || SH
-  // 棋盘撑满短边 92%，留边距
+  var info = wx.getSystemInfoSync()
+  W = info.windowWidth
+  H = info.windowHeight
   var short = Math.min(W, H)
   cellSize = Math.floor(short * 0.92 / SIZE)
   boardPx = SIZE * cellSize
