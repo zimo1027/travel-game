@@ -7,51 +7,57 @@ var H = canvas.height
 // ========== 缩放基准 ==========
 var S = H / 667
 
-// ========== 棋盘路径生成（外围一圈，顺时针） ==========
-var G = 9  // 9x9 网格
-var cellSize = Math.floor(H * 0.78 / G)
-var boardX = 20 * S
-var boardY = (H - cellSize * G) / 2
+// ========== 棋盘路径生成（蛇形蜿蜒） ==========
+var ROWS = 7
+var COLS = 9
+var cellSize = Math.floor(H * 0.78 / ROWS)
+var boardW = COLS * cellSize
+var boardH = ROWS * cellSize
+var boardX = (W - boardW) / 2
+var boardY = (H - boardH) / 2
 
 var path = []  // [{row, col, type, label, data}]
-// 顶边: 左→右
-for (var c = 0; c < G; c++) { path.push({ row: 0, col: c }) }
-// 右边: 上→下
-for (var r = 1; r < G; r++) { path.push({ row: r, col: G - 1 }) }
-// 底边: 右→左
-for (var c = G - 2; c >= 0; c--) { path.push({ row: G - 1, col: c }) }
-// 左边: 下→上
-for (var r = G - 2; r >= 1; r--) { path.push({ row: r, col: 0 }) }
+// 蛇形：奇数行正走，偶数行反走
+for (var r = 0; r < ROWS; r++) {
+  if (r % 2 === 0) {
+    for (var c = 0; c < COLS; c++) { path.push({ row: r, col: c }) }
+  } else {
+    for (var c = COLS - 1; c >= 0; c--) { path.push({ row: r, col: c }) }
+  }
+}
 
-// 路径上每个格子的类型
 function setTile(i, type, label, data) {
   path[i].type = type
   path[i].label = label
   path[i].data = data || {}
 }
-// 默认普通格
 for (var i = 0; i < path.length; i++) { path[i].type = 'normal' }
 
-var TOTAL = path.length  // 32 格
+var TOTAL = path.length  // ROWS * COLS = 63 格
 
-// 打卡点（4个）
-setTile(4,  'checkpoint', '太和门', { cpIndex: 0 })
-setTile(12, 'checkpoint', '太和殿', { cpIndex: 1 })
-setTile(20, 'checkpoint', '乾清宫', { cpIndex: 2 })
-setTile(28, 'checkpoint', '御花园', { cpIndex: 3 })
+// 打卡点（4个，均匀分布）
+setTile(12, 'checkpoint', '太和门', { cpIndex: 0 })
+setTile(26, 'checkpoint', '太和殿', { cpIndex: 1 })
+setTile(40, 'checkpoint', '乾清宫', { cpIndex: 2 })
+setTile(54, 'checkpoint', '御花园', { cpIndex: 3 })
 
-// 起点 = 终点（神武门/午门）
-// 玩家从 index 0 出发，收集完所有打卡点后到达这里即通关
-setTile(0, 'start_end', '午门·神武门')
+// 起点 + 终点
+setTile(0,  'start',  '午门🚩', {})
+setTile(TOTAL - 1, 'end', '神武门🏁', {})
 
 // 特殊格子
-setTile(6,  'forward',  '疾行 +3',  { steps: 3 })
-setTile(10, 'backward', '迷路 -2',  { steps: 2 })
-setTile(15, 'skip',     '休息一回合', {})
-setTile(18, 'teleport', '穿越！',   { toTile: 26 })
-setTile(22, 'backward', '绕路 -3',  { steps: 3 })
-setTile(24, 'forward',  '捷径 +4',  { steps: 4 })
-setTile(30, 'question', '答题格',   {})
+setTile(5,  'forward',  '疾行 +3',  { steps: 3 })
+setTile(9,  'backward', '迷路 -2',  { steps: 2 })
+setTile(16, 'forward',  '捷径 +4',  { steps: 4 })
+setTile(18, 'skip',     '休息',     {})
+setTile(23, 'teleport', '穿越!',    { toTile: 45 })
+setTile(31, 'backward', '绕路 -3',  { steps: 3 })
+setTile(35, 'question', '答题',     {})
+setTile(38, 'forward',  '疾行 +3',  { steps: 3 })
+setTile(44, 'skip',     '休息',     {})
+setTile(48, 'backward', '迷路 -2',  { steps: 2 })
+setTile(50, 'teleport', '穿越!',    { toTile: 15 })
+setTile(57, 'forward',  '捷径 +4',  { steps: 4 })
 
 // ========== 游戏状态 ==========
 var playerPos = 0
@@ -123,14 +129,16 @@ function handleLanding(tileIndex) {
   } else if (tile.type === 'question') {
     message = '❓ 答题功能开发中…'
     messageTimer = 60
-  } else if (tile.type === 'start_end') {
-    // 检查是否全部打卡
+  } else if (tile.type === 'end') {
     var allDone = collected.every(function (c) { return c })
     if (allDone) {
       message = '🏆 恭喜通关！'
       messageTimer = 999
       phase = 'done'
       return
+    } else {
+      message = '🔒 还有景点未打卡，继续前进！'
+      messageTimer = 80
     }
   }
 }
@@ -146,7 +154,7 @@ canvas.addEventListener('touchstart', function (e) {
   var ty = (t.clientY - rect.top) * scaleY
 
   // 骰子区域（屏幕右下）
-  var diceX = boardX + cellSize * G + 60 * S
+  var diceX = boardX + boardW + 40 * S
   var diceY = H / 2
   var diceSize = Math.min(160 * S, W - diceX - 20 * S)
   if (tx >= diceX && tx <= diceX + diceSize &&
@@ -174,58 +182,47 @@ function getPathXY(index) {
 }
 
 function drawBoard() {
-  // 底色
+  // 棋盘底色
   ctx.fillStyle = '#F5E6D3'
-  ctx.fillRect(boardX, boardY, cellSize * G, cellSize * G)
+  ctx.fillRect(boardX - 4, boardY - 4, boardW + 8, boardH + 8)
 
-  // 内部区域（紫禁城装饰）
-  var innerX = boardX + cellSize
-  var innerY = boardY + cellSize
-  var innerW = cellSize * (G - 2)
-  var innerH = cellSize * (G - 2)
-  ctx.fillStyle = '#3E1F1F'
-  ctx.fillRect(innerX, innerY, innerW, innerH)
+  // 木纹边框
+  ctx.strokeStyle = '#8B5E3C'
+  ctx.lineWidth = 8
+  ctx.strokeRect(boardX - 4, boardY - 4, boardW + 8, boardH + 8)
 
-  // 内部装饰文字
-  ctx.fillStyle = '#D4AF37'
-  var innerFont = Math.round(cellSize * 0.5) + 'px sans-serif'
-  ctx.font = innerFont
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('故', innerX + innerW / 2 - cellSize * 1.2, innerY + innerH / 2)
-  ctx.fillText('宫', innerX + innerW / 2 + cellSize * 1.2, innerY + innerH / 2)
-  ctx.fillStyle = 'rgba(212,175,55,0.3)'
-  ctx.font = Math.round(cellSize * 0.28) + 'px sans-serif'
-  ctx.fillText('紫 禁 城', innerX + innerW / 2, innerY + innerH / 2 + cellSize * 0.8)
-
-  // 路径格子
+  // 画所有格子
   for (var i = 0; i < path.length; i++) {
     var p = path[i]
     var x = boardX + p.col * cellSize
     var y = boardY + p.row * cellSize
-    var pad = 3
+    var pad = 2
 
+    // 格子颜色
     var fillColor = '#E8D5B7'
     if (p.type === 'checkpoint') fillColor = '#FF9800'
-    else if (p.type === 'forward') fillColor = '#81C784'
-    else if (p.type === 'backward') fillColor = '#EF9A9A'
-    else if (p.type === 'skip') fillColor = '#B0BEC5'
-    else if (p.type === 'teleport') fillColor = '#CE93D8'
-    else if (p.type === 'question') fillColor = '#64B5F6'
-    else if (p.type === 'start_end') fillColor = '#D4AF37'
+    else if (p.type === 'forward')   fillColor = '#81C784'
+    else if (p.type === 'backward')  fillColor = '#EF9A9A'
+    else if (p.type === 'skip')      fillColor = '#B0BEC5'
+    else if (p.type === 'teleport')  fillColor = '#CE93D8'
+    else if (p.type === 'question')  fillColor = '#64B5F6'
+    else if (p.type === 'start')     fillColor = '#D4AF37'
+    else if (p.type === 'end')       fillColor = '#D4AF37'
 
     ctx.fillStyle = fillColor
     ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
 
-    // 边框
-    ctx.strokeStyle = '#C8B898'
-    ctx.lineWidth = 1
-    ctx.strokeRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2)
+    // 序号
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'
+    var seqFont = Math.round(cellSize * 0.18) + 'px sans-serif'
+    ctx.font = seqFont
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(i + 1, x + pad + 2, y + pad + 1)
 
     // 文字标签
     if (p.label) {
-      var fs = Math.round(cellSize * 0.22)
-      if (p.type === 'start_end') fs = Math.round(cellSize * 0.2)
+      var fs = Math.round(cellSize * 0.2)
       ctx.fillStyle = '#333'
       ctx.font = 'bold ' + fs + 'px sans-serif'
       ctx.textAlign = 'center'
@@ -237,17 +234,35 @@ function drawBoard() {
     if (p.type === 'checkpoint') {
       var ci = p.data.cpIndex
       if (collected[ci]) {
-        ctx.fillStyle = 'rgba(76,175,80,0.7)'
+        ctx.fillStyle = 'rgba(76,175,80,0.75)'
         ctx.beginPath()
-        ctx.arc(x + cellSize - pad - 8, y + pad + 8, cellSize * 0.22, 0, Math.PI * 2)
+        ctx.arc(x + cellSize - pad - 6, y + pad + 6, cellSize * 0.2, 0, Math.PI * 2)
         ctx.fill()
         ctx.fillStyle = '#FFF'
-        ctx.font = 'bold ' + Math.round(cellSize * 0.22) + 'px sans-serif'
+        ctx.font = 'bold ' + Math.round(cellSize * 0.18) + 'px sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText('✓', x + cellSize - pad - 8, y + pad + 8)
+        ctx.fillText('✓', x + cellSize - pad - 6, y + pad + 6)
       }
     }
+  }
+
+  // 路径连接箭头（相邻两格之间画小箭头）
+  for (var j = 0; j < path.length - 1; j++) {
+    var a = path[j]
+    var b = path[j + 1]
+    var ax = boardX + a.col * cellSize + cellSize / 2
+    var ay = boardY + a.row * cellSize + cellSize / 2
+    var bx = boardX + b.col * cellSize + cellSize / 2
+    var by = boardY + b.row * cellSize + cellSize / 2
+
+    // 只画水平/垂直相邻的（中间点）
+    var mx = (ax + bx) / 2
+    var my = (ay + by) / 2
+    ctx.fillStyle = 'rgba(139,94,60,0.5)'
+    ctx.beginPath()
+    ctx.arc(mx, my, cellSize * 0.08, 0, Math.PI * 2)
+    ctx.fill()
   }
 }
 
@@ -354,7 +369,7 @@ function drawHUD() {
 }
 
 function drawInfoPanel() {
-  var px = boardX + cellSize * G + 30 * S
+  var px = boardX + boardW + 20 * S
   var py = 60 * S
   var pw = W - px - 16 * S
   var ph = H - py - 60 * S
